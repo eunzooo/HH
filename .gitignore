@@ -1,0 +1,51 @@
+# Visual Studio / Rider
+.vs/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Compiled Object Files
+*.slo
+*.lo
+*.o
+*.obj
+*.gch
+*.pch
+
+# Libraries & Executables
+*.so
+*.dylib
+*.dll
+*.lai
+*.la
+*.a
+*.lib
+*.exe
+*.out
+*.app
+*.ipa
+
+# Xcode (Mac)
+*.xcodeproj
+*.xcworkspace
+
+# Unity 자동 생성 폴더
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# OS 생성 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# WIP 임시 파일
+_WIP/**/*.tmp
+_WIP/**/.scratch

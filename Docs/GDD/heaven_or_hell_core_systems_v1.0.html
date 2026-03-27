@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HEAVEN OR HELL - 핵심 시스템 설계서</title>
+  <style>
+    :root {
+      --bg: #111318;
+      --panel: #191d24;
+      --panel-2: #202631;
+      --line: #323a48;
+      --text: #e9edf4;
+      --muted: #aab4c3;
+      --accent: #72c6ff;
+      --accent-2: #ffb38a;
+      --good: #9ed8a3;
+      --bad: #ff9d9d;
+      --warn: #f5c542;
+      --shadow: 0 18px 40px rgba(0,0,0,.28);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(114,198,255,.08), transparent 28%),
+        radial-gradient(circle at top right, rgba(255,179,138,.08), transparent 24%),
+        linear-gradient(180deg, #0f1217 0%, #141922 100%);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .layout {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px 24px 96px;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── TOC Sidebar ── */
+    .toc-sidebar {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
+    }
+    .toc-sidebar .card { padding: 18px; }
+    .toc-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .toc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+    .toc-list a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: block;
+      transition: background .15s;
+    }
+    .toc-list a:hover { background: rgba(255,255,255,.06); }
+    .toc-list .depth-3 { padding-left: 22px; color: var(--muted); font-size: 12px; }
+
+    /* ── Main Content ── */
+    main { min-width: 0; }
+
+    .hero {
+      padding: 36px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(114,198,255,.08), rgba(255,179,138,.06)), var(--panel);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: .04em;
+      margin-bottom: 12px;
+    }
+
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.1; letter-spacing: -.03em; }
+
+    .doc-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 0;
+    }
+    .doc-meta span {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .incomplete-box {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: rgba(245,197,66,.08);
+      border: 1px solid rgba(245,197,66,.2);
+      color: var(--warn);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    section {
+      margin-top: 24px;
+      scroll-margin-top: 24px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 28px;
+      letter-spacing: -.02em;
+      scroll-margin-top: 24px;
+    }
+
+    h3 {
+      margin: 20px 0 10px;
+      font-size: 19px;
+      scroll-margin-top: 24px;
+    }
+
+    h4 { margin: 14px 0 8px; font-size: 16px; color: var(--accent); }
+
+    p { margin: 0 0 12px; }
+    p.lead, .section-desc { color: var(--muted); margin-top: 0; }
+
+    ul, ol { margin: 0 0 12px; padding-left: 20px; }
+    li + li { margin-top: 6px; }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; margin: 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 12px 14px; border: 1px solid var(--line); vertical-align: top; text-align: left; }
+    th { background: rgba(255,255,255,.05); font-size: 13px; white-space: nowrap; }
+    td { background: rgba(255,255,255,.02); }
+
+    /* ── Status Markers ── */
+    .status { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-left: 4px; }
+    .status-tbd, .status-wip { background: rgba(255,179,138,.15); color: #ffb38a; }
+    .status-review { background: rgba(245,197,66,.12); color: #f5c542; }
+    .status-delete { color: #7b8190; text-decoration: line-through; background: rgba(255,255,255,.05); }
+
+    /* ── Mermaid ── */
+    .flow-box {
+      overflow-x: auto;
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      margin: 14px 0;
+    }
+
+    /* ── Utility ── */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+    .inner-card { padding: 18px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 16px; }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 999px;
+      background: rgba(114,198,255,.09); color: #d8efff;
+      border: 1px solid rgba(114,198,255,.16); font-size: 13px;
+    }
+    .pill.orange { background: rgba(255,179,138,.09); color: #ffe0cc; border-color: rgba(255,179,138,.16); }
+    .pill.green { background: rgba(158,216,163,.09); color: #d4f0d6; border-color: rgba(158,216,163,.16); }
+
+    .quote {
+      padding: 16px 18px;
+      border-left: 4px solid var(--accent);
+      background: rgba(114,198,255,.06);
+      border-radius: 14px;
+      color: #eaf6ff;
+      font-weight: 600;
+      margin: 14px 0;
+    }
+
+    .good { color: var(--good); }
+    .bad { color: var(--bad); }
+
+    code {
+      font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+      background: rgba(255,255,255,.06);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .footer-note { margin-top: 32px; color: var(--muted); font-size: 13px; text-align: right; }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; color: #111; }
+      .layout { grid-template-columns: 1fr; }
+      .toc-sidebar { display: none; }
+      .hero, .card, .inner-card, .flow-box { box-shadow: none; border-color: #bbb; background: #fff; }
+      th { background: #eee; }
+      td { background: #fff; }
+      .status-tbd, .status-wip { background: #fff3e0; color: #b35c00; }
+      .status-review { background: #fff9c4; color: #7a6500; }
+      section { break-inside: avoid; }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 16px 14px 72px; }
+      .toc-sidebar { position: static; max-height: none; }
+      .toc-list { display: flex; flex-wrap: wrap; gap: 6px; }
+      .toc-list a { padding: 6px 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); border-radius: 999px; }
+      .toc-list .depth-3 { padding-left: 10px; }
+      .hero { padding: 24px; border-radius: 20px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 22px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .card { padding: 18px; border-radius: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- ═══ TOC Sidebar ═══ -->
+    <nav class="toc-sidebar">
+      <div class="card">
+        <div class="toc-title">Table of Contents</div>
+        <ul class="toc-list" id="tocList"></ul>
+      </div>
+    </nav>
+
+    <!-- ═══ Main ═══ -->
+    <main>
+      <!-- ── Hero Header ── -->
+      <header class="hero">
+        <div class="eyebrow">HEAVEN OR HELL · 시스템 설계서</div>
+        <h1>핵심 시스템 설계서</h1>
+        <p class="lead" style="margin-top:10px;">망자 분류 · 대화 시스템 · 업경 컷신 — 판별 플레이의 3대 핵심 시스템을 구현 수준으로 정의한다.</p>
+        <div class="doc-meta">
+          <span class="version">v1.0</span>
+          <span class="doc-date">2026-03-19</span>
+          <span class="doc-author">재현</span>
+        </div>
+        <div id="incompleteSummary" class="incomplete-box" hidden></div>
+      </header>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 1. 시스템 개요 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-overview">
+        <div class="card">
+          <h2>1. 시스템 개요</h2>
+          <p class="section-desc">본 문서는 HEAVEN OR HELL의 플레이 핵심을 이루는 세 시스템을 정의한다. 세 시스템은 독립적으로 동작하지 않으며, 하나의 판별 세션 안에서 순차적·조건부로 연결된다.</p>
+
+          <h3 id="sec-overview-purpose">1-1. 목적</h3>
+          <ul>
+            <li>플레이어가 망자의 천국/지옥 행선지를 판정하는 <strong>판별 세션</strong>의 전체 흐름과 규칙을 구현 가능한 수준으로 명세한다.</li>
+            <li>대화 분기, 정보 해금, 업경 트리거를 포함한 <strong>상호작용 규칙</strong>을 정의한다.</li>
+            <li>프로그래머와 아티스트가 동일 문서를 참조하여 구현·연출 작업을 진행할 수 있도록 한다.</li>
+          </ul>
+
+          <h3 id="sec-overview-scope">1-2. 범위</h3>
+          <div class="grid-3">
+            <div class="inner-card">
+              <h4>포함</h4>
+              <ul>
+                <li>망자 분류 프로세스</li>
+                <li>대화 시스템 규칙</li>
+                <li>업경 컷신 시스템</li>
+                <li>시스템 간 연동 규칙</li>
+              </ul>
+            </div>
+            <div class="inner-card">
+              <h4>제외 (별도 문서)</h4>
+              <ul>
+                <li>휴게실 이벤트 / 외부인 개입</li>
+                <li>엔딩 분기 / 정산 시스템</li>
+                <li>UI/UX 레이아웃 상세</li>
+                <li>NPC 개별 시나리오 데이터</li>
+              </ul>
+            </div>
+            <div class="inner-card">
+              <h4>연관 시스템</h4>
+              <ul>
+                <li>코어 루프 (일별 근무 흐름)</li>
+                <li>휴게실 이벤트 시스템</li>
+                <li>엔딩 정산 시스템</li>
+                <li>세이브/로드 시스템</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 id="sec-overview-terms">1-3. 용어 정의</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:22%;">용어</th><th>정의</th><th style="width:28%;">비고</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>판별 세션</strong></td><td>하나의 망자를 프로필 확인 → 대화 → 판정까지 처리하는 단일 작업 단위</td><td>1일 근무에 복수 세션 포함</td></tr>
+                <tr><td><strong>NPC 프로필</strong></td><td>이름, 나이, 직업, 사인, 범죄 이력 등 서류상 기본 정보</td><td>판정의 명시적 근거</td></tr>
+                <tr><td><strong>NPC 스토리</strong></td><td>프로필만으로 드러나지 않는 맥락, 정황, 서사</td><td>대화를 통해 점진적 해금</td></tr>
+                <tr><td><strong>업경(業鏡)</strong></td><td>NPC의 과거 행위를 영상으로 보여주는 초자연적 장치</td><td>핵심 서사 보상 메커니즘</td></tr>
+                <tr><td><strong>판정</strong></td><td>플레이어가 <span class="good">천국</span> 또는 <span class="bad">지옥</span>을 최종 선택하는 행위</td><td>되돌리기 불가</td></tr>
+                <tr><td><strong>정보 플래그</strong></td><td>대화 중 특정 선택지를 통해 해금되는 숨겨진 정보 단위</td><td>업경 트리거 조건에 사용</td></tr>
+                <tr><td><strong>전화기 튜토리얼</strong></td><td>초반 근무일에 상사가 전화로 판별 기준을 안내하는 시스템 도움말</td><td>Day 1~2 한정 <span class="status status-tbd">[TBD]</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 2. 망자 분류 시스템 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-classify">
+        <div class="card">
+          <h2>2. 망자 분류 시스템</h2>
+          <p class="section-desc">판별 세션의 전체 흐름을 정의한다. 플레이어는 프로필 검토 → 대화 → (조건부) 업경 → 판정의 단계를 거친다.</p>
+
+          <h3 id="sec-classify-flow">2-1. 판별 세션 흐름</h3>
+          <div class="flow-box">
+            <div class="mermaid">
+flowchart TD
+    START([망자 입장]) --> PROFILE[프로필 확인]
+    PROFILE --> DIALOGUE[대화 시작]
+    DIALOGUE --> BRANCH{정보 플래그\n충족 여부}
+    BRANCH -- 트리거 충족 --> MIRROR[업경 컷신 재생]
+    BRANCH -- 미충족 --> DECIDE
+    MIRROR --> DECIDE[판정 화면 전환]
+    DECIDE --> JUDGE{천국 / 지옥\n선택}
+    JUDGE -- 천국 --> HEAVEN[천국 배정 연출]
+    JUDGE -- 지옥 --> HELL[지옥 배정 연출]
+    HEAVEN --> RESULT[판정 결과 기록]
+    HELL --> RESULT
+    RESULT --> NEXT{다음 망자\n존재?}
+    NEXT -- 예 --> START
+    NEXT -- 아니오 --> REST([휴게실 전환])
+
+    style START fill:#2a3a5c,stroke:#72c6ff,color:#e9edf4
+    style REST fill:#2a3a5c,stroke:#72c6ff,color:#e9edf4
+    style HEAVEN fill:#1a3d2a,stroke:#9ed8a3,color:#e9edf4
+    style HELL fill:#3d1a1a,stroke:#ff9d9d,color:#e9edf4
+    style MIRROR fill:#3d2e1a,stroke:#ffb38a,color:#e9edf4
+            </div>
+          </div>
+
+          <h3 id="sec-classify-profile">2-2. NPC 프로필 구조</h3>
+          <p>프로필은 판정의 1차 근거이며, 대화 전 플레이어에게 먼저 제시된다.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:18%;">필드</th><th style="width:12%;">타입</th><th>설명</th><th style="width:18%;">표시 조건</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>이름</td><td>string</td><td>망자의 이름 (실명 또는 가명)</td><td>항상 표시</td></tr>
+                <tr><td>나이</td><td>int</td><td>사망 시점 나이</td><td>항상 표시</td></tr>
+                <tr><td>직업</td><td>string</td><td>생전 직업</td><td>항상 표시</td></tr>
+                <tr><td>사인</td><td>string</td><td>사망 원인 (예: 교통사고, 병사, 타살)</td><td>항상 표시</td></tr>
+                <tr><td>범죄 이력</td><td>string[]</td><td>기록된 범죄 목록. 없으면 "없음"</td><td>항상 표시</td></tr>
+                <tr><td>선행 기록</td><td>string[]</td><td>기록된 선행 목록. 없으면 "없음"</td><td>항상 표시</td></tr>
+                <tr><td>비고</td><td>string</td><td>특이사항, 사내 메모, 외부인 메모 등</td><td>조건부 <span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>초상화</td><td>image</td><td>망자의 외형 일러스트</td><td>항상 표시</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="sec-classify-rules">2-3. 판정 규칙</h3>
+          <p>판정에 객관적 정답은 존재하지 않는다. 단, <strong>내부 판정 기준표</strong>가 존재하여 성과 평가에 활용된다.</p>
+
+          <div class="grid-2">
+            <div class="inner-card">
+              <h4>내부 판정 기준표</h4>
+              <ul>
+                <li>각 NPC에는 <strong>의도된 정답</strong>(intended_verdict)이 사전 설정된다.</li>
+                <li>플레이어 판정과 의도된 정답의 일치 여부가 <strong>정확도(accuracy)</strong>로 기록된다.</li>
+                <li>정확도는 엔딩 분기의 핵심 변수 중 하나이다.</li>
+              </ul>
+            </div>
+            <div class="inner-card">
+              <h4>회색 지대 NPC</h4>
+              <ul>
+                <li>일부 NPC는 의도된 정답이 <strong>없거나</strong> 천국/지옥 모두 유효하다.</li>
+                <li>이 경우 정확도가 아닌 <strong>선택 성향</strong>(tendency)으로 분류된다.</li>
+                <li>성향 누적값은 엔딩 톤에 영향을 준다. <span class="status status-tbd">[TBD]</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 id="sec-classify-session">2-4. 일별 세션 구성</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>항목</th><th>값</th><th>비고</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>총 근무일</td><td>10일</td><td>게임 개요서 기준 고정</td></tr>
+                <tr><td>1일당 망자 수</td><td>2~4명 <span class="status status-tbd">[TBD]</span></td><td>일차에 따라 점진적 증가 검토</td></tr>
+                <tr><td>1세션 예상 소요 시간</td><td>3~8분 <span class="status status-tbd">[TBD]</span></td><td>대화 분기 깊이에 따라 변동</td></tr>
+                <tr><td>전체 NPC 수</td><td>25~35명 <span class="status status-tbd">[TBD]</span></td><td>총 플레이타임 약 90분 기준 역산</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="sec-classify-result">2-5. 판정 결과 처리</h3>
+          <p>판정이 확정되면 아래 데이터가 기록되고, 이후 시스템에 전달된다.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:22%;">기록 항목</th><th>설명</th><th style="width:26%;">소비처</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>verdict</td><td>천국(HEAVEN) 또는 지옥(HELL)</td><td>엔딩 정산, 정확도 계산</td></tr>
+                <tr><td>accuracy_match</td><td>의도된 정답과 일치 여부 (true/false/null)</td><td>엔딩 분기 변수</td></tr>
+                <tr><td>tendency_delta</td><td>회색 지대 NPC의 경우 성향 변동값</td><td>엔딩 톤 결정</td></tr>
+                <tr><td>unlocked_flags[]</td><td>이번 세션에서 해금한 정보 플래그 목록</td><td>업경 해금 여부 기록</td></tr>
+                <tr><td>mirror_triggered</td><td>업경 컷신 재생 여부</td><td>통계, 엔딩 조건</td></tr>
+                <tr><td>session_duration</td><td>세션 소요 시간 (초 단위)</td><td>내부 밸런스용 <span class="status status-wip">[WIP]</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 3. 대화 시스템 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-dialogue">
+        <div class="card">
+          <h2>3. 대화 시스템</h2>
+          <p class="section-desc">망자와의 대화는 판별 세션의 핵심 상호작용이다. 플레이어의 질문 선택에 따라 정보 해금 경로가 달라지고, 업경 트리거 충족 여부가 결정된다.</p>
+
+          <h3 id="sec-dialogue-structure">3-1. 대화 구조</h3>
+          <div class="flow-box">
+            <div class="mermaid">
+stateDiagram-v2
+    [*] --> 인사_단계 : 망자 입장
+    인사_단계 --> 자유질문 : 자동 인사 종료
+    자유질문 --> 자유질문 : 질문 선택
+    자유질문 --> 심화질문 : 핵심 키워드 해금
+    심화질문 --> 심화질문 : 추가 추궁
+    심화질문 --> 업경대기 : 트리거 플래그 충족
+    심화질문 --> 판정대기 : 대화 종료 선택
+    자유질문 --> 판정대기 : 대화 종료 선택
+    업경대기 --> 판정대기 : 업경 재생 완료
+    판정대기 --> [*] : 판정 실행
+            </div>
+          </div>
+
+          <p>하나의 대화 세션은 3개 단계를 순차적으로 거친다. 플레이어는 언제든 대화를 종료하고 판정으로 넘어갈 수 있다.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:16%;">단계</th><th>설명</th><th style="width:20%;">진입 조건</th><th style="width:20%;">종료 조건</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>인사 단계</strong></td>
+                  <td>망자가 자기소개 또는 상황 설명을 한다. 플레이어 선택지 없음.</td>
+                  <td>세션 시작 시 자동</td>
+                  <td>NPC 대사 종료 시 자동</td>
+                </tr>
+                <tr>
+                  <td><strong>자유질문</strong></td>
+                  <td>플레이어가 선택지 풀에서 질문을 골라 대화를 이끈다. 질문 종류에 따라 NPC 반응과 해금 정보가 달라진다.</td>
+                  <td>인사 단계 종료</td>
+                  <td>핵심 키워드 해금 → 심화 전환<br/>또는 플레이어가 대화 종료 선택</td>
+                </tr>
+                <tr>
+                  <td><strong>심화질문</strong></td>
+                  <td>핵심 키워드가 해금된 후 열리는 추궁 단계. 더 깊은 정보와 업경 트리거 플래그를 획득할 수 있다.</td>
+                  <td>핵심 키워드 해금</td>
+                  <td>트리거 충족 → 업경 재생<br/>또는 플레이어가 대화 종료 선택</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="sec-dialogue-types">3-2. 질문 유형</h3>
+          <p>플레이어에게 제시되는 선택지는 아래 유형으로 분류된다. 유형에 따라 NPC 반응과 해금 결과가 달라진다.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:16%;">유형</th><th style="width:14%;">아이콘</th><th>효과</th><th style="width:28%;">예시</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>추궁하기</strong></td>
+                  <td>🔍</td>
+                  <td>NPC의 진술 모순을 지적한다. 성공 시 숨겨진 정보 해금. 실패 시 NPC 방어 반응.</td>
+                  <td>"프로필에는 범죄 이력이 없다고 되어 있는데, 방금 하신 말씀과 모순되지 않나요?"</td>
+                </tr>
+                <tr>
+                  <td><strong>동조하기</strong></td>
+                  <td>💬</td>
+                  <td>NPC의 감정에 공감한다. 신뢰도가 올라 자발적 고백 유도. 모순 지적 기회를 잃을 수 있음.</td>
+                  <td>"그런 상황이었다면 누구라도 힘들었을 거예요."</td>
+                </tr>
+                <tr>
+                  <td><strong>사실확인</strong></td>
+                  <td>📋</td>
+                  <td>프로필 데이터와 NPC 진술을 대조한다. 중립적 반응. 정보 해금 가능성 보통.</td>
+                  <td>"기록에는 직업이 교사로 되어 있는데, 맞으신가요?"</td>
+                </tr>
+                <tr>
+                  <td><strong>침묵</strong></td>
+                  <td>⏸️</td>
+                  <td>아무 말 없이 기다린다. 일부 NPC는 침묵에 반응해 자발적으로 정보를 제공한다.</td>
+                  <td>(…)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="sec-dialogue-branch">3-3. 대화 분기 규칙</h3>
+          <p>선택지 제시와 분기는 아래 규칙을 따른다.</p>
+          <ul>
+            <li><strong>선택지 수:</strong> 한 턴에 2~4개 선택지를 제시한다. <span class="status status-tbd">[TBD]</span></li>
+            <li><strong>선택지 구성:</strong> 최소 2개 이상의 질문 유형이 포함되어야 한다.</li>
+            <li><strong>선택지 소멸:</strong> 한 번 선택한 질문은 동일 세션에서 재등장하지 않는다.</li>
+            <li><strong>턴 제한:</strong> 자유질문 + 심화질문 합산 최대 턴 수를 두어 무한 대화를 방지한다. <span class="status status-tbd">[TBD]</span></li>
+            <li><strong>대화 종료:</strong> 플레이어는 언제든 "판정으로 넘어가기" 선택지를 사용할 수 있다. 단, 인사 단계에서는 불가.</li>
+          </ul>
+
+          <h3 id="sec-dialogue-reaction">3-4. NPC 반응 시스템</h3>
+          <p>NPC는 플레이어의 질문 유형과 대화 맥락에 따라 반응한다. 반응은 아래 카테고리로 분류된다.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:18%;">반응 유형</th><th>트리거 조건</th><th>결과</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>솔직한 답변</strong></td>
+                  <td>신뢰도 높음 + 적절한 질문 유형</td>
+                  <td>정보 플래그 해금, 스토리 진행</td>
+                </tr>
+                <tr>
+                  <td><strong>회피</strong></td>
+                  <td>민감한 주제 + 신뢰도 낮음</td>
+                  <td>정보 해금 실패, 다른 접근 필요</td>
+                </tr>
+                <tr>
+                  <td><strong>거짓말</strong></td>
+                  <td>범죄/비밀 관련 질문 + NPC 성격 특성</td>
+                  <td>잘못된 정보 제공 (추궁으로 간파 가능)</td>
+                </tr>
+                <tr>
+                  <td><strong>감정 폭발</strong></td>
+                  <td>연속 추궁 또는 민감 키워드 직격</td>
+                  <td>대화 흐름 단절, 심화질문 강제 전환 가능</td>
+                </tr>
+                <tr>
+                  <td><strong>자발적 고백</strong></td>
+                  <td>동조 누적 + 특정 NPC 성격 조합</td>
+                  <td>핵심 정보 자동 해금, 업경 트리거 기여</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="sec-dialogue-unlock">3-5. 정보 해금 메커니즘</h3>
+          <p>정보 해금은 대화 시스템의 핵심 보상이자 업경 트리거의 전제 조건이다.</p>
+
+          <div class="flow-box">
+            <div class="mermaid">
+flowchart LR
+    Q1[질문 선택] --> R1{NPC 반응}
+    R1 -- 솔직/고백 --> FLAG[정보 플래그 해금]
+    R1 -- 회피/거짓말 --> RETRY[다른 질문 시도]
+    RETRY --> Q1
+    FLAG --> CHECK{트리거 조건\n검사}
+    CHECK -- 모든 필수 플래그 충족 --> TRIGGER[업경 트리거 활성]
+    CHECK -- 미충족 --> Q1
+    CHECK -- 일부 충족 --> KEYWORD[핵심 키워드 해금\n→ 심화질문 개방]
+
+    style FLAG fill:#1a3d2a,stroke:#9ed8a3,color:#e9edf4
+    style TRIGGER fill:#3d2e1a,stroke:#ffb38a,color:#e9edf4
+    style KEYWORD fill:#2a3a5c,stroke:#72c6ff,color:#e9edf4
+            </div>
+          </div>
+
+          <h4>정보 플래그 데이터 구조</h4>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:22%;">필드</th><th style="width:14%;">타입</th><th>설명</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>flag_id</td><td>string</td><td>고유 식별자 (예: <code>npc_01_secret_crime</code>)</td></tr>
+                <tr><td>npc_id</td><td>string</td><td>소속 NPC 식별자</td></tr>
+                <tr><td>category</td><td>enum</td><td>SURFACE(표면) / DEEP(심층) / CORE(핵심)</td></tr>
+                <tr><td>unlock_condition</td><td>object</td><td>해금에 필요한 질문 유형, 선행 플래그 등 조건</td></tr>
+                <tr><td>display_text</td><td>string</td><td>해금 시 플레이어에게 표시되는 요약 텍스트</td></tr>
+                <tr><td>is_mirror_required</td><td>bool</td><td>업경 트리거의 필수 플래그 여부</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="quote">정보 플래그는 3단계 계층(SURFACE → DEEP → CORE)으로 나뉘며, CORE 플래그가 모두 해금되어야 업경이 발동한다. 플레이어는 SURFACE만으로도 판정이 가능하지만, 깊이 파고들수록 더 정확한(또는 더 흔들리는) 판단 근거를 얻게 된다.</div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 4. 업경 컷신 시스템 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-mirror">
+        <div class="card">
+          <h2>4. 업경 컷신 시스템</h2>
+          <p class="section-desc">업경(業鏡)은 NPC의 생전 행위를 영상으로 재현하는 장치이다. 대화의 절정부에서 발동하며, 판별의 감정 밀도를 극대화하는 서사 보상 메커니즘이다.</p>
+
+          <h3 id="sec-mirror-trigger">4-1. 트리거 조건</h3>
+          <p>업경은 자동 발동이며, 플레이어가 임의로 실행할 수 없다.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:22%;">조건 유형</th><th>설명</th><th style="width:20%;">필수 여부</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>CORE 플래그 충족</strong></td>
+                  <td>해당 NPC의 <code>is_mirror_required = true</code>인 모든 정보 플래그가 해금된 상태</td>
+                  <td>필수</td>
+                </tr>
+                <tr>
+                  <td><strong>대화 단계</strong></td>
+                  <td>심화질문 단계에 진입한 상태</td>
+                  <td>필수</td>
+                </tr>
+                <tr>
+                  <td><strong>특수 NPC 조건</strong></td>
+                  <td>일부 NPC는 추가 조건이 존재 (예: 특정 질문 유형 사용, 특정 선택지 경유)</td>
+                  <td>NPC별 선택 <span class="status status-tbd">[TBD]</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flow-box">
+            <div class="mermaid">
+flowchart TD
+    subgraph 트리거_검사["트리거 조건 검사"]
+        C1[CORE 플래그\n전부 해금?] --> C2[심화질문\n단계인가?]
+        C2 --> C3[특수 조건\n충족?]
+    end
+    C3 -- 모두 충족 --> FIRE[업경 발동]
+    C3 -- 하나라도 미충족 --> SKIP[업경 미발동\n→ 대화 계속 or 판정]
+
+    FIRE --> TRANS[화면 전환 연출]
+    TRANS --> PLAY[컷신 재생]
+    PLAY --> RETURN[대화 화면 복귀]
+    RETURN --> DECIDE[판정 화면 전환]
+
+    style FIRE fill:#3d2e1a,stroke:#ffb38a,color:#e9edf4
+    style SKIP fill:#2a2a2a,stroke:#666,color:#aab4c3
+            </div>
+          </div>
+
+          <h3 id="sec-mirror-flow">4-2. 연출 흐름</h3>
+          <p>업경 발동 시 아래 순서로 연출이 진행된다.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:8%;">순서</th><th style="width:18%;">단계</th><th>연출 내용</th><th style="width:22%;">예상 시간</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td><strong>진입 연출</strong></td>
+                  <td>화면이 백색/흑색으로 페이드. 업경 프레임 UI가 등장. NPC 대사 음성이 페이드아웃.</td>
+                  <td>1~2초 <span class="status status-tbd">[TBD]</span></td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td><strong>컷신 재생</strong></td>
+                  <td>NPC의 생전 장면을 일러스트 + 텍스트 + 효과음으로 재현. 복수 장면(scene)이 순차 재생된다.</td>
+                  <td>15~45초 <span class="status status-tbd">[TBD]</span></td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td><strong>핵심 공개</strong></td>
+                  <td>컷신의 마지막 장면에서 NPC의 진실 또는 반전이 드러난다. 전용 연출(확대, 색조 변화 등)이 적용된다.</td>
+                  <td>3~5초</td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td><strong>복귀 연출</strong></td>
+                  <td>업경 프레임 소멸. 대화 화면으로 페이드 복귀. NPC가 짧은 반응 대사를 출력한다.</td>
+                  <td>1~2초</td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td><strong>판정 전환</strong></td>
+                  <td>업경 재생 직후 판정 화면으로 자동 전환. 추가 대화 불가.</td>
+                  <td>즉시</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="sec-mirror-scene">4-3. 컷신 장면 데이터 구조</h3>
+          <p>하나의 업경 컷신은 복수의 장면(scene) 시퀀스로 구성된다.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:22%;">필드</th><th style="width:14%;">타입</th><th>설명</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>mirror_id</td><td>string</td><td>컷신 고유 식별자 (예: <code>mirror_npc_01</code>)</td></tr>
+                <tr><td>npc_id</td><td>string</td><td>대상 NPC 식별자</td></tr>
+                <tr><td>required_flags[]</td><td>string[]</td><td>발동에 필요한 CORE 플래그 ID 목록</td></tr>
+                <tr><td>scenes[]</td><td>Scene[]</td><td>순차 재생되는 장면 배열</td></tr>
+                <tr><td>post_dialogue</td><td>string</td><td>업경 종료 후 NPC 반응 대사</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4>Scene 객체 구조</h4>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:22%;">필드</th><th style="width:14%;">타입</th><th>설명</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>scene_index</td><td>int</td><td>재생 순서 (0부터 시작)</td></tr>
+                <tr><td>illustration</td><td>string</td><td>배경 일러스트 리소스 경로</td></tr>
+                <tr><td>narration</td><td>string</td><td>나레이션 텍스트</td></tr>
+                <tr><td>sfx</td><td>string</td><td>효과음 리소스 경로 (nullable)</td></tr>
+                <tr><td>duration</td><td>float</td><td>표시 시간(초). 0이면 플레이어 입력 대기.</td></tr>
+                <tr><td>transition</td><td>enum</td><td>FADE / CUT / DISSOLVE <span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>is_reveal</td><td>bool</td><td>true면 핵심 공개 장면 — 전용 연출 적용</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 id="sec-mirror-skip">4-4. 스킵 및 예외 처리</h3>
+          <ul>
+            <li><strong>첫 회차:</strong> 업경 컷신은 스킵 불가. 플레이어에게 핵심 서사 보상을 강제로 전달한다.</li>
+            <li><strong>2회차 이후:</strong> 이미 본 컷신은 스킵 가능 여부 검토. <span class="status status-tbd">[TBD]</span></li>
+            <li><strong>미발동 세션:</strong> 업경이 발동하지 않아도 판정은 정상 진행된다. 미발동 시 판정 화면에 "업경 미확인" 표시를 둘지 여부 검토. <span class="status status-review">[검토필요]</span></li>
+            <li><strong>세이브/로드:</strong> 업경 재생 중 세이브는 불가. 업경 시작 직전 오토세이브 검토. <span class="status status-tbd">[TBD]</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 5. 시스템 연동 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-integration">
+        <div class="card">
+          <h2>5. 시스템 연동</h2>
+          <p class="section-desc">세 시스템이 하나의 판별 세션 안에서 어떻게 연결되는지 정의한다.</p>
+
+          <h3 id="sec-integration-map">5-1. 시스템 간 데이터 흐름</h3>
+          <div class="flow-box">
+            <div class="mermaid">
+flowchart LR
+    subgraph 망자분류["🗂️ 망자 분류"]
+        A1[NPC 프로필 로드]
+        A2[판정 결과 기록]
+    end
+
+    subgraph 대화["💬 대화 시스템"]
+        B1[선택지 제시]
+        B2[NPC 반응 처리]
+        B3[정보 플래그 해금]
+    end
+
+    subgraph 업경["🪞 업경 컷신"]
+        C1[트리거 조건 검사]
+        C2[컷신 재생]
+    end
+
+    A1 -- 프로필 데이터 --> B1
+    B1 --> B2
+    B2 --> B3
+    B3 -- 플래그 목록 --> C1
+    C1 -- 발동 --> C2
+    C2 -- 재생 완료 --> A2
+    B3 -- 미발동 / 대화종료 --> A2
+
+    style A1 fill:#2a3a5c,stroke:#72c6ff,color:#e9edf4
+    style A2 fill:#2a3a5c,stroke:#72c6ff,color:#e9edf4
+    style B3 fill:#1a3d2a,stroke:#9ed8a3,color:#e9edf4
+    style C2 fill:#3d2e1a,stroke:#ffb38a,color:#e9edf4
+            </div>
+          </div>
+
+          <h3 id="sec-integration-external">5-2. 외부 시스템 연동 포인트</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:22%;">외부 시스템</th><th>연동 내용</th><th style="width:22%;">방향</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>코어 루프</td>
+                  <td>일별 근무 시작 시 해당 일차의 NPC 리스트를 망자 분류 시스템에 전달</td>
+                  <td>코어 루프 → 분류</td>
+                </tr>
+                <tr>
+                  <td>휴게실 이벤트</td>
+                  <td>외부인의 부탁이 특정 NPC 판정에 영향을 줄 경우, 프로필 비고란에 메모 추가</td>
+                  <td>휴게실 → 분류</td>
+                </tr>
+                <tr>
+                  <td>엔딩 정산</td>
+                  <td>10일간 누적된 판정 기록(accuracy, tendency, mirror 통계)을 엔딩 분기에 전달</td>
+                  <td>분류 → 엔딩</td>
+                </tr>
+                <tr>
+                  <td>전화기 튜토리얼</td>
+                  <td>초반 근무일에 판별 기준 안내. 대화 시스템과 병렬로 동작 <span class="status status-tbd">[TBD]</span></td>
+                  <td>튜토리얼 → 대화</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 6. 예외 처리 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-exception">
+        <div class="card">
+          <h2>6. 예외 처리</h2>
+          <p class="section-desc">정상 흐름을 벗어나는 상황에 대한 처리 규칙을 정의한다.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:26%;">상황</th><th>처리 규칙</th><th style="width:20%;">비고</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>인사 단계에서 판정 시도</td>
+                  <td>불가. "판정으로 넘어가기" 선택지가 인사 단계에서는 비활성화.</td>
+                  <td>UI 차원 비활성</td>
+                </tr>
+                <tr>
+                  <td>대화 없이 즉시 판정</td>
+                  <td>자유질문 1턴 이상 진행 후에만 판정 가능. <span class="status status-tbd">[TBD]</span></td>
+                  <td>최소 상호작용 보장</td>
+                </tr>
+                <tr>
+                  <td>업경 재생 중 강제 종료</td>
+                  <td>업경은 중단 불가. 게임 자체 종료 시 업경 시작 직전 시점으로 복구.</td>
+                  <td>오토세이브 연동</td>
+                </tr>
+                <tr>
+                  <td>모든 선택지 소진</td>
+                  <td>더 이상 질문이 없으면 자동으로 판정 화면 전환.</td>
+                  <td>턴 제한과 별도</td>
+                </tr>
+                <tr>
+                  <td>회색 지대 NPC + 업경 미발동</td>
+                  <td>정상 처리. 의도된 정답이 없으므로 accuracy_match = null 기록.</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>외부인 메모가 있는 NPC</td>
+                  <td>프로필 비고란에 메모 표시. 대화 선택지에 메모 관련 질문 추가 여부 <span class="status status-tbd">[TBD]</span></td>
+                  <td>휴게실 연동</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 7. 구현 메모 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-impl">
+        <div class="card">
+          <h2>7. 구현 메모</h2>
+          <p class="section-desc">프로그래밍 구현 시 참고할 기술적 메모.</p>
+
+          <div class="grid-2">
+            <div class="inner-card">
+              <h4>대화 데이터 관리</h4>
+              <ul>
+                <li>NPC별 대화 트리는 외부 데이터 파일(CSV 또는 JSON)로 관리하여 기획자가 직접 수정 가능하게 구성한다.</li>
+                <li>정보 플래그와 트리거 조건도 동일 데이터 파일 내에 정의한다.</li>
+                <li>Unity 기준: ScriptableObject 또는 Addressable로 NPC 데이터 로드. <span class="status status-wip">[WIP]</span></li>
+              </ul>
+            </div>
+            <div class="inner-card">
+              <h4>업경 연출</h4>
+              <ul>
+                <li>컷신은 런타임 생성이 아닌 <strong>사전 제작 시퀀스</strong>로 처리한다.</li>
+                <li>Unity Timeline 또는 커스텀 시퀀서를 사용하여 일러스트 + 텍스트 + SFX를 동기화한다. <span class="status status-wip">[WIP]</span></li>
+                <li>리소스는 Addressable 비동기 로드 — 업경 트리거 감지 시점에 프리로드 시작.</li>
+              </ul>
+            </div>
+            <div class="inner-card">
+              <h4>상태 관리</h4>
+              <ul>
+                <li>판별 세션 상태는 <strong>SessionState</strong> 클래스로 중앙 관리한다.</li>
+                <li>상태 전이: PROFILE → DIALOGUE → (MIRROR) → VERDICT → RESULT</li>
+                <li>각 전이 시점에 이벤트를 발행하여 UI, 오디오, 연출이 구독.</li>
+              </ul>
+            </div>
+            <div class="inner-card">
+              <h4>세이브 연동</h4>
+              <ul>
+                <li>세이브 시점: 판별 세션 시작 전 + 판정 완료 후</li>
+                <li>업경 재생 중 세이브 불가 — 업경 시작 직전 오토세이브로 보장.</li>
+                <li>세이브 데이터에 포함: 일차, 세션 인덱스, 누적 판정 기록, 해금 플래그 전체 <span class="status status-wip">[WIP]</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════ -->
+      <!-- 8. 오픈 이슈 -->
+      <!-- ══════════════════════════════════════════ -->
+      <section id="sec-issues">
+        <div class="card">
+          <h2>8. 오픈 이슈</h2>
+          <p class="section-desc">확정이 필요한 미결 사항을 정리한다.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:6%;">#</th><th style="width:24%;">항목</th><th>설명</th><th style="width:12%;">마커</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>1일당 망자 수</td><td>일차별 점진적 증가 구조 vs 고정 수. 플레이타임 밸런스와 연계 필요.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>2</td><td>대화 턴 제한</td><td>자유질문 + 심화질문 합산 최대 턴 수. 너무 짧으면 탐색 재미 감소, 너무 길면 템포 저하.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>3</td><td>선택지 수</td><td>턴당 2~4개 범위에서 고정값 또는 가변값 결정.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>4</td><td>회색 지대 성향 반영 방식</td><td>성향 누적값이 엔딩 톤에 미치는 영향의 구체적 계산식.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>5</td><td>2회차 업경 스킵</td><td>이미 본 컷신의 스킵 허용 여부 및 스킵 시 판정 결과에 차이가 있는지.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>6</td><td>업경 미확인 표시</td><td>업경 미발동 세션에서 판정 화면에 "업경 미확인" UI를 표시할지.</td><td><span class="status status-review">[검토필요]</span></td></tr>
+                <tr><td>7</td><td>전화기 튜토리얼 범위</td><td>어느 일차까지 전화기 안내가 등장하는지, 대화 시스템과의 병렬 동작 방식.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>8</td><td>외부인 메모 → 선택지 반영</td><td>휴게실 이벤트의 메모가 대화 선택지에 직접 반영되는지, 프로필 비고로만 제공하는지.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>9</td><td>컷신 전환 효과 종류</td><td>FADE / CUT / DISSOLVE 외 추가 전환 효과 필요 여부.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+                <tr><td>10</td><td>NPC 데이터 포맷</td><td>CSV vs JSON vs ScriptableObject 중 최종 포맷 확정.</td><td><span class="status status-wip">[WIP]</span></td></tr>
+                <tr><td>11</td><td>세이브 데이터 스키마</td><td>세이브에 포함할 데이터 필드의 최종 명세.</td><td><span class="status status-wip">[WIP]</span></td></tr>
+                <tr><td>12</td><td>프로필 비고란 표시 조건</td><td>어떤 조건에서 비고란이 표시되는지 구체화.</td><td><span class="status status-tbd">[TBD]</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-note">HEAVEN OR HELL · 핵심 시스템 설계서 v1.0 · 2026-03-19</div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+
+    /* ── TOC 자동 생성 ── */
+    (function buildTOC() {
+      const tocList = document.getElementById('tocList');
+      const headings = document.querySelectorAll('main h2, main h3');
+      headings.forEach(h => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = '#' + (h.closest('section')?.id || h.id || '');
+        if (h.id) a.href = '#' + h.id;
+        a.textContent = h.textContent.replace(/\[.*?\]/g, '').trim();
+        if (h.tagName === 'H3') a.classList.add('depth-3');
+        li.appendChild(a);
+        tocList.appendChild(li);
+      });
+    })();
+
+    /* ── 미완성 마커 집계 ── */
+    (function updateIncompleteSummary() {
+      const counts = {
+        tbd: document.querySelectorAll('.status-tbd').length,
+        wip: document.querySelectorAll('.status-wip').length,
+        review: document.querySelectorAll('.status-review').length,
+        del: document.querySelectorAll('.status-delete').length,
+      };
+      const total = counts.tbd + counts.wip + counts.review + counts.del;
+      const box = document.getElementById('incompleteSummary');
+      if (!box || total === 0) return;
+      box.hidden = false;
+      box.textContent = `⚠️ 미완성 항목 ${total}건 포함 (TBD ${counts.tbd}, WIP ${counts.wip}, 검토필요 ${counts.review}, 삭제예정 ${counts.del})`;
+    })();
+  </script>
+</body>
+</html>
+<!-- tags: 시스템, 대화, 분류 -->
