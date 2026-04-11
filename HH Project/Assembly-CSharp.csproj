@@ -62,7 +62,7 @@
   <ItemGroup>
     <Compile Include="Assets\_Game\Scripts\NPCData.cs" />
     <Compile Include="Assets\_Game\Scripts\SceneLoader.cs" />
-    <Compile Include="Assets\_Game\Scripts\NPCManager.cs" />
+    <Compile Include="Assets\_Game\Scripts\NPCUI.cs" />
     <Compile Include="Assets\_Game\Scripts\CSVLoader.cs" />
   </ItemGroup>
   <ItemGroup>

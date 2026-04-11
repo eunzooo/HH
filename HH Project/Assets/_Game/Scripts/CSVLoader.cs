@@ -3,23 +3,45 @@ using System.Collections.Generic;
 
 public class CSVLoader : MonoBehaviour
 {
-    public List<NPCData> npcList = new List<NPCData>();
+    public Dictionary<int, NPCData> npcDict = new Dictionary<int, NPCData>();
 
-    void Start()
+    void Awake()
     {
         LoadCSV();
     }
 
     void LoadCSV()
     {
-        TextAsset csvFile = Resources.Load<TextAsset>("npc");
-        string[] lines = csvFile.text.Split('\n');
+        TextAsset csvFile = Resources.Load<TextAsset>("HH_npc_data");
 
-        for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
+        if (csvFile == null)
+        {
+            Debug.LogError("CSV 파일 못 찾음");
+            return;
+        }
+
+        string[] lines = csvFile.text.Split(new[] { "\r\n", "\n" }, System.StringSplitOptions.None);
+
+        //Debug.Log("총 줄 수: " + lines.Length);
+
+        for (int i = 1; i < lines.Length; i++)
         {
             if (string.IsNullOrWhiteSpace(lines[i])) continue;
 
-            string[] data = lines[i].Split(',');
+            //Debug.Log("원본 줄: " + lines[i]);
+
+            string[] data = lines[i].Split(','); 
+
+            //Debug.Log("분리 개수: " + data.Length);
+
+            for (int j = 0; j < data.Length; j++)
+                data[j] = data[j].Trim();
+
+            if (data.Length < 8)
+            {
+                Debug.LogWarning("데이터 부족: " + lines[i]);
+                continue;
+            }
 
             NPCData npc = new NPCData()
             {
@@ -33,7 +55,17 @@ public class CSVLoader : MonoBehaviour
                 portrait = Resources.Load<Sprite>("Images/" + data[7])
             };
 
-            npcList.Add(npc);
+            npcDict[npc.id] = npc;
         }
+
+        //Debug.Log("NPC 로드 완료: " + npcDict.Count);
+    }
+    public NPCData GetNPC(int id)
+    {
+        if (npcDict.TryGetValue(id, out NPCData npc))
+            return npc;
+
+        Debug.LogWarning("NPC 없음: " + id);
+        return null;
     }
 }
