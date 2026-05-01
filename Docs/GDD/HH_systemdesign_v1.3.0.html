@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heaven or Hell 시스템 기획서 v1.3.0</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Cinzel:wght@400;600;700&display=swap');
+
+    :root {
+      /* ── 기본 배경·텍스트 ── */
+      --bg-primary:    #ffffff;
+      --bg-secondary:  #f6f6f8;
+      --bg-card:       #f0f1f4;
+      --bg-card-hover: #e8e9ee;
+
+      --text-primary:   #1a1a22;
+      --text-secondary: #48485a;
+      --text-muted:     #9090a4;
+
+      --border:        #d0d0dc;
+      --border-strong: #a0a0b8;
+
+      /* ── 천국(Heaven) — 파랑 ── */
+      --heaven: #1c5fa8;
+      --heaven-bg: #ddeaf8;
+      --heaven-border: #a8c8ee;
+
+      /* ── 지옥(Hell) — 빨강 ── */
+      --hell: #b52828;
+      --hell-bg: #fce8e8;
+      --hell-border: #f0aaaa;
+
+      /* ── 강조 (파랑/빨강 사이 중성 — 극히 제한적 사용) ── */
+      --accent: #1c5fa8;
+
+      /* ── 상태 마커 ── */
+      --tbd-bg:      #fff3e0;
+      --tbd-border:  #ffb74d;
+      --tbd-color:   #c77700;
+      --wip-bg:      #fff8e1;
+      --wip-border:  #ffd54f;
+      --wip-color:   #a06000;
+      --review-bg:   #fce4ec;
+      --review-border: #f48fb1;
+      --review-color: #b0003a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    /* ── 레이아웃 ── */
+    .wrapper { display: flex; min-height: 100vh; }
+
+    /* ── 사이드 TOC ── */
+    #toc {
+      width: 260px;
+      min-width: 260px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 28px 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    #toc::-webkit-scrollbar { width: 4px; }
+    #toc::-webkit-scrollbar-track { background: transparent; }
+    #toc::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+    .toc-title {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 0 24px 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .toc-list { list-style: none; }
+    .toc-list li a {
+      display: block;
+      padding: 5px 24px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 12.5px;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .toc-list li a:hover {
+      color: var(--heaven);
+      border-left-color: var(--heaven);
+      background: var(--heaven-bg);
+    }
+    .toc-list li.toc-h2 a {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .toc-list li.toc-h3 a { padding-left: 36px; font-size: 12px; }
+    .toc-list li.toc-h4 a { padding-left: 50px; font-size: 11.5px; color: var(--text-muted); }
+
+    /* ── 메인 콘텐츠 ── */
+    main { flex: 1; max-width: 900px; padding: 48px 56px; overflow-x: hidden; }
+
+    /* ── 문서 헤더 ── */
+    .doc-header {
+      border-bottom: 2px solid var(--text-primary);
+      padding-bottom: 28px;
+      margin-bottom: 36px;
+    }
+    .doc-meta {
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .doc-meta span {
+      font-size: 11.5px;
+      padding: 3px 10px;
+      border-radius: 3px;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .version {
+      background: var(--text-primary);
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .doc-date {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .doc-status {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .doc-game-title {
+      font-family: 'Cinzel', serif;
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .doc-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em;
+    }
+    .doc-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 18px 0;
+    }
+    .doc-info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .info-cell {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 11px 12px;
+    }
+    .info-cell .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .info-cell .value {
+      font-size: 13px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* ── 미완성 배너 ── */
+    .incomplete-banner {
+      background: var(--tbd-bg);
+      border: 1px solid var(--tbd-border);
+      border-radius: 6px;
+      padding: 12px 18px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--tbd-color);
+    }
+    .incomplete-banner .icon { font-size: 17px; }
+    .incomplete-badge {
+      background: rgba(255,183,77,.25);
+      border: 1px solid var(--tbd-border);
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    /* ── 섹션 헤딩 ── */
+    .section { margin-bottom: 52px; }
+
+    h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: var(--text-primary);
+      letter-spacing: 0.05em;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--text-primary);
+      margin-bottom: 22px;
+      margin-top: 44px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 19px;
+      background: var(--heaven);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    h2 .sec-num {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+
+    h3 {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 15px;
+      color: var(--text-primary);
+      margin: 26px 0 11px;
+      padding-left: 12px;
+      border-left: 3px solid var(--heaven);
+    }
+    h4 {
+      font-size: 13.5px;
+      color: var(--heaven);
+      margin: 18px 0 8px;
+      font-weight: 600;
+    }
+
+    p { color: var(--text-secondary); margin-bottom: 12px; line-height: 1.9; }
+
+    /* ── 카드 ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 18px 22px;
+      margin-bottom: 14px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .card-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    /* ── 테이블 ── */
+    .table-wrap { overflow-x: auto; margin-bottom: 18px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      border: 1px solid var(--border);
+    }
+    thead tr { background: var(--bg-secondary); }
+    thead th {
+      padding: 9px 14px;
+      text-align: left;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--border-strong);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    tbody tr:hover { background: var(--bg-card); }
+    tbody td { padding: 9px 14px; color: var(--text-secondary); vertical-align: top; }
+    tbody td:first-child { color: var(--text-primary); }
+
+    /* ── 뱃지 ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-heaven {
+      background: var(--heaven-bg);
+      color: var(--heaven);
+      border: 1px solid var(--heaven-border);
+    }
+    .badge-hell {
+      background: var(--hell-bg);
+      color: var(--hell);
+      border: 1px solid var(--hell-border);
+    }
+    .badge-neutral {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .badge-gold {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      font-weight: 700;
+    }
+
+    /* ── 상태 마커 ── */
+    .tbd {
+      display: inline-block;
+      background: var(--tbd-bg);
+      border: 1px solid var(--tbd-border);
+      color: var(--tbd-color);
+      padding: 1px 7px;
+      border-radius: 3px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .wip {
+      display: inline-block;
+      background: var(--wip-bg);
+      border: 1px solid var(--wip-border);
+      color: var(--wip-color);
+      padding: 1px 7px;
+      border-radius: 3px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .review {
+      display: inline-block;
+      background: var(--review-bg);
+      border: 1px solid var(--review-border);
+      color: var(--review-color);
+      padding: 1px 7px;
+      border-radius: 3px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+    .tbd-inline    { background: var(--tbd-bg);    border: 1px solid var(--tbd-border);    padding: 0 6px; border-radius: 3px; color: var(--tbd-color);    font-weight: 700; font-size: 12px; }
+    .wip-inline    { background: var(--wip-bg);    border: 1px solid var(--wip-border);    padding: 0 6px; border-radius: 3px; color: var(--wip-color);    font-weight: 700; font-size: 12px; }
+    .review-inline { background: var(--review-bg); border: 1px solid var(--review-border); padding: 0 6px; border-radius: 3px; color: var(--review-color); font-weight: 700; font-size: 12px; }
+
+    /* ── 다이어그램 컨테이너 ── */
+    .diagram-wrap {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+    }
+    .diagram-caption {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* ── 가중치 바 ── */
+    .weight-bar-group { margin-bottom: 14px; }
+    .weight-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .weight-label { width: 80px; font-size: 12.5px; color: var(--text-secondary); flex-shrink: 0; }
+    .weight-bar-bg { flex: 1; height: 10px; background: var(--bg-card); border-radius: 5px; overflow: hidden; border: 1px solid var(--border); }
+    .weight-bar-fill { height: 100%; border-radius: 5px; }
+    .weight-pct { width: 40px; font-size: 12.5px; color: var(--heaven); font-weight: 700; text-align: right; }
+
+    /* ── NPC 카드 ── */
+    .npc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 14px; }
+    .npc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+    .npc-card .npc-name { font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 4px; }
+    .npc-card .npc-req {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      font-style: italic;
+      border-left: 3px solid var(--border-strong);
+      padding-left: 10px;
+      margin: 8px 0;
+    }
+
+    /* ── 엔딩 카드 ── */
+    .ending-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .ending-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+    .ending-card .ending-name { font-weight: 700; font-size: 13.5px; margin-bottom: 6px; }
+
+    /* ── 콜아웃 박스 ── */
+    .callout {
+      border-radius: 0 5px 5px 0;
+      padding: 13px 17px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .callout-gold   { background: var(--bg-card); border-left: 3px solid var(--text-primary); }
+    .callout-heaven { background: var(--heaven-bg); border-left: 3px solid var(--heaven); }
+    .callout-hell   { background: var(--hell-bg);   border-left: 3px solid var(--hell); }
+    .callout-title  { font-weight: 700; margin-bottom: 4px; color: var(--text-primary); }
+
+    /* ── 목록 ── */
+    ul.doc-list { list-style: none; padding: 0; margin-bottom: 12px; }
+    ul.doc-list li {
+      padding: 4px 0 4px 18px;
+      color: var(--text-secondary);
+      font-size: 13.5px;
+      position: relative;
+    }
+    ul.doc-list li::before { content: '▸'; position: absolute; left: 0; color: var(--border-strong); }
+    ol.doc-ol { padding-left: 20px; margin-bottom: 12px; }
+    ol.doc-ol li { padding: 4px 0; color: var(--text-secondary); font-size: 13.5px; }
+
+    /* ── 구분선 ── */
+    .sec-divider { height: 1px; background: var(--border); margin: 28px 0; }
+
+    /* ── pre / CSV 블록 ── */
+    .csv-block { background: var(--bg-secondary) !important; color: var(--text-secondary) !important; }
+
+    /* ── 인쇄 ── */
+    @media print {
+      #toc { display: none; }
+      main { padding: 24px; max-width: 100%; }
+    }
+
+    /* ── Mermaid 라이트 테마 ── */
+    .mermaid { background: transparent !important; }
+
+    /* ════════════════════════════════════════════
+       모바일 반응형 (max-width: 768px)
+       PC 레이아웃은 일절 수정하지 않음
+    ════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .wrapper { flex-direction: column; }
+      #toc {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 80vw; max-width: 300px;
+        height: 100vh;
+        z-index: 1000;
+        padding-top: 56px;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+      }
+      #toc.open { display: block; }
+      #mob-menu-btn {
+        display: flex;
+        position: fixed;
+        top: 12px; left: 12px;
+        z-index: 1100;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        width: 40px; height: 40px;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-size: 18px;
+      }
+      #mob-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.35);
+        z-index: 999;
+      }
+      #mob-overlay.open { display: block; }
+      main { padding: 60px 16px 32px; max-width: 100%; }
+      .doc-game-title { font-size: 22px; }
+      .doc-subtitle { font-size: 13px; }
+      .doc-info-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .doc-meta { flex-wrap: wrap; gap: 8px; }
+      h2 { font-size: 15px; margin-top: 32px; }
+      h3 { font-size: 13.5px; }
+      h4 { font-size: 12.5px; }
+      .card-grid,
+      .card-grid-3,
+      .npc-grid,
+      .ending-grid { grid-template-columns: 1fr; gap: 10px; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 480px; }
+      .diagram-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 12px; }
+      .screen-flow { flex-wrap: wrap; gap: 6px; }
+      .incomplete-banner { flex-wrap: wrap; gap: 6px; font-size: 12px; padding: 10px 14px; }
+      .card { padding: 14px 16px; }
+      .weight-label { width: 60px; font-size: 11.5px; }
+      .svg-mockup-wrap svg { width: 100% !important; height: auto !important; }
+    }
+  </style>
+</head>
+<body>
+<!-- 모바일 메뉴 버튼 (PC에서는 JS로 숨김) -->
+<button id="mob-menu-btn" aria-label="목차 열기" style="display:none;">☰</button>
+<div id="mob-overlay"></div>
+
+<div class="wrapper">
+
+<!-- ──────────────── TOC ──────────────── -->
+<nav id="toc">
+  <div class="toc-title">목차 · Table of Contents</div>
+  <ul class="toc-list" id="toc-list"></ul>
+</nav>
+
+<!-- ──────────────── MAIN ──────────────── -->
+<main id="main-content">
+
+  <!-- 헤더 -->
+  <header class="doc-header">
+    <div class="doc-meta">
+      <span class="version">v1.3.0</span>
+      <span class="doc-date">2026-04-09</span>
+      <span class="doc-status doc-author">시스템 기획서 · MONCAGE</span>
+      <span class="doc-status">⚠️ 미완성 항목 포함 (TBD 10, WIP 2, 검토필요 2)</span>
+    </div>
+    <div class="doc-game-title">HEAVEN OR HELL</div>
+    <div class="doc-subtitle">시스템 기획서 · System Design Document</div>
+    <div class="doc-divider"></div>
+    <div class="doc-info-grid">
+      <div class="info-cell">
+        <div class="label">장르</div>
+        <div class="value">판별 시뮬레이션</div>
+      </div>
+      <div class="info-cell">
+        <div class="label">플랫폼</div>
+        <div class="value">PC (Steam)</div>
+      </div>
+      <div class="info-cell">
+        <div class="label">엔진</div>
+        <div class="value">Unity</div>
+      </div>
+      <div class="info-cell">
+        <div class="label">플레이타임</div>
+        <div class="value">90분 내외</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 미완성 배너 -->
+  <div class="incomplete-banner">
+    <span class="icon">⚠️</span>
+    <span>
+      미완성 항목 포함 —
+      <span class="incomplete-badge">TBD 12</span>
+      <span class="incomplete-badge">WIP 2</span>
+      <span class="incomplete-badge">검토필요 2</span>
+    </span>
+  </div>
+
+
+  <!-- ===== 0. 문서 개요 ===== -->
+  <section class="section" id="s0">
+    <h2><span class="sec-num">00</span> 문서 개요</h2>
+
+    <h3 id="s0-1">0.1 작성 목적 및 범위</h3>
+    <p>본 문서는 <strong>Heaven or Hell</strong>의 개발을 위한 시스템 기획서로, 게임을 구성하는 핵심 시스템의 동작 방식, 데이터 구조, 분기 로직을 명세한다.</p>
+    <ul class="doc-list">
+      <li>코어 루프 및 일차(Day) 구조 정의</li>
+      <li>망자 분류·대화·업경 시스템 상세 명세</li>
+      <li>직원 휴게실 및 외부인 개입 시스템 명세</li>
+      <li>NPC 데이터 구조 및 생성 규칙 정의</li>
+      <li>업보 수치·엔딩·해금 시스템 정의</li>
+      <li>UI/UX 화면 전환 흐름 정의</li>
+      <li>DLC 확장 설계 방향 제시</li>
+    </ul>
+
+    <h3 id="s0-2">0.2 용어 정의</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>용어</th><th>정의</th></tr></thead>
+        <tbody>
+          <tr><td>망자(亡者)</td><td>분류 대상이 되는 NPC. 플레이어가 천국 또는 지옥을 판정해야 한다.</td></tr>
+          <tr><td>업경(業鏡)</td><td>망자와의 대화 중 특정 플래그 조건 달성 시 발동하는 스토리 컷신. 해당 망자의 생전 주요 장면을 보여준다.</td></tr>
+          <tr><td>외부인</td><td>직원 휴게실에 등장하는 특수 NPC(저승사자·신·크툴루·파라오 등). 플레이어에게 청탁을 건넨다.</td></tr>
+          <tr><td>Day</td><td>1회 출근~퇴근의 단위. 총 10회 반복 후 엔딩 처리된다.</td></tr>
+          <tr><td><strong>업보 수치(業報數値)</strong></td><td>엔딩 항목별로 독립적으로 증감하는 수치. 망자 분류 및 휴게실 상호작용 모두 이 수치를 변동시킨다. 게임 종료 시 <strong>가장 높은 항목의 엔딩이 발동</strong>된다. (구 명칭: 인사평가 점수)</td></tr>
+          <tr><td>업보 항목</td><td>업보 수치를 구성하는 개별 카테고리. 엔딩 수만큼 존재한다. (예: 신 수치, 악마 수치, 평범 수치 등)</td></tr>
+          <tr><td>청탁</td><td>외부인이 플레이어에게 요구하는 특정 분류 지시. 수락·거절 여부가 업보 수치에 영향.</td></tr>
+          <tr><td>코어 루프</td><td>출근 → 망자분류 씬 → 직원휴게실 씬 → 퇴근으로 이어지는 1일치 게임플레이 사이클.</td></tr>
+          <tr><td>분류 씬</td><td>망자를 상대하는 메인 플레이 공간. 프로필 열람, 대화, 판정 버튼이 모두 이 씬에서 동작한다.</td></tr>
+          <tr><td>휴게실 씬</td><td>업무 후 외부인과 상호작용하는 공간. 분류 씬으로 건드릴 수 없는 업보 수치 항목을 증감하거나 특정 엔딩 경로를 해금한다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ===== 1. 코어 루프 ===== -->
+  <section class="section" id="s1">
+    <h2><span class="sec-num">01</span> 게임 코어 루프</h2>
+
+    <h3 id="s1-1">1.1 전체 플로우 다이어그램</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    A([게임 시작]) --> B[타이틀 / 오프닝]
+    B --> C[Day 1 출근]
+    C --> D{망자 분류 업무}
+    D --> E[직원 휴게실]
+    E --> F{외부인 청탁 발생?}
+    F -- Yes --> G[청탁 수락 / 거절]
+    G --> H[퇴근]
+    F -- No --> H
+    H --> I{Day 10 완료?}
+    I -- No --> C
+    I -- Yes --> J[10일 결과 집계]
+    J --> K{업보 수치 분기}
+    K --> L1[엔딩 A]
+    K --> L2[엔딩 B]
+    K --> L3[엔딩 C]
+    K --> L4[엔딩 D / ...]
+    L1 & L2 & L3 & L4 --> M[업적·일러스트 해금]
+    M --> N([결과 화면])
+
+    style A fill:#c9a84c,color:#0d0d0f,stroke:none
+    style N fill:#6ea8d8,color:#0d0d0f,stroke:none
+    style L1 fill:#6ea8d8,color:#0d0d0f,stroke:none
+    style L2 fill:#6ea8d8,color:#0d0d0f,stroke:none
+    style L3 fill:#d85a5a,color:#fff,stroke:none
+    style L4 fill:#d85a5a,color:#fff,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 전체 게임 플로우 (10일 루프 구조)</div>
+    </div>
+
+    <h3 id="s1-2">1.2 일차(Day) 구조 상세</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>단계</th><th>씬</th><th>내용</th><th>소요 시간(예상)</th><th>비고</th></tr></thead>
+        <tbody>
+          <tr><td>① 출근 연출</td><td>스타트 화면</td><td>짧은 오프닝 컷 또는 대사 연출</td><td><span class="tbd-inline">TBD</span></td><td>Day 1은 전화기 튜토리얼 포함</td></tr>
+          <tr><td>② 망자 분류</td><td><strong>분류 씬</strong></td><td>N명의 망자 순서대로 처리. 판정 버튼은 대화 중 언제든 활성화.</td><td>1인당 <span class="tbd-inline">TBD</span></td><td>일차별 망자 수 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>③ 직원 휴게실</td><td><strong>휴게실 씬</strong></td><td>외부인 청탁·플래그 이벤트 처리. 업보 수치 직접 증감.</td><td><span class="tbd-inline">TBD</span></td><td>이벤트 없을 시 스킵 가능 여부 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>④ 퇴근 연출</td><td>엔딩 화면 (Day 10)</td><td>당일 결과 요약. Day 10은 최종 엔딩 처리.</td><td><span class="tbd-inline">TBD</span></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s1-3">1.3 필요 화면(씬) 목록</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>화면명</th><th>역할</th><th>전환 조건</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-gold">스타트 화면</span></td><td>타이틀, 새 게임·계속하기 메뉴</td><td>게임 실행 시 / 엔딩 후 복귀</td></tr>
+          <tr><td><span class="badge badge-gold">망자 분류 화면</span></td><td>메인 플레이 공간. 프로필 열람·대화·판정 버튼 포함</td><td>Day 시작 후 자동 진입</td></tr>
+          <tr><td><span class="badge badge-gold">휴게실 화면</span></td><td>외부인 청탁, 업보 수치 조작, 플래그 이벤트</td><td>분류 업무 완료 후 전환</td></tr>
+          <tr><td><span class="badge badge-gold">엔딩 화면</span></td><td>Day 10 퇴근 후 최고 업보 수치 항목에 해당하는 엔딩 연출</td><td>Day 10 휴게실 종료 후</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-gold">
+      <div class="callout-title">📌 설계 의도</div>
+      10일이라는 짧고 명확한 플레이 단위로 리플레이를 자연스럽게 유도하며, 매 회차마다 외부인 등장 조합과 청탁 내용을 다변화하여 반복 피로도를 최소화한다.
+    </div>
+  </section>
+
+
+  <!-- ===== 2. 망자 분류 시스템 ===== -->
+  <section class="section" id="s2">
+    <h2><span class="sec-num">02</span> 망자 분류 시스템</h2>
+
+    <h3 id="s2-1">2.1 분류 씬 구성 요소</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+graph TD
+    subgraph 분류씬["📋 망자 분류 씬 (메인 플레이 공간)"]
+        P[망자 스프라이트 화면 하단 중앙 배치]
+        PR[프로필 팝업 클릭 시 이력서 형태 표시]
+        D[대화창 메신저 앱 형태 / 화면 우측]
+        J[판정 버튼 천국 / 지옥 — 언제든 활성]
+        T[전화기 Day 1 상사 안내]
+        YK[업경 컷신 플래그 조건 충족 시 발동]
+    end
+    P -- 클릭 --> PR
+    P -.대화 진행.-> D
+    D --> J
+    T -.Day 1.-> D
+    D -.플래그 충족.-> YK
+
+    style 분류씬 fill:#1a1a20,stroke:#c9a84c,color:#e8e4d8
+    style J fill:#c9a84c,color:#0d0d0f,stroke:none
+    style YK fill:#6a3a6a,color:#e8e4d8,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 망자 분류 씬 구성 요소</div>
+    </div>
+
+    <h3 id="s2-f1">2.2 기능 1 — 판정 버튼</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">✅ 확정</div>
+      플레이어는 망자를 상대하는 도중 <strong>언제든지</strong> 천국 또는 지옥 버튼을 누를 수 있다. 대화 종료 조건 없음.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>항목</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>활성 조건</td><td>분류 씬 진입 시부터 상시 활성 (업경 컷신 재생 중 비활성)</td></tr>
+          <tr><td>판정 실행</td><td>버튼 클릭 → 망자 분류 방향 애니메이션 재생 → 다음 망자로 전환</td></tr>
+          <tr><td>업보 수치 반영</td><td>망자별 정답 여부에 따라 해당 업보 항목 즉시 증감</td></tr>
+          <tr><td>오판정 예시</td><td>착한 망자를 지옥으로 보낼 경우 → 악마 수치↑ / 신 수치↓</td></tr>
+          <tr><td>버튼 디자인</td><td>천국(↑) / 지옥(↓) 도장 스탬프 연출 포함 (§10.3 UI_STAMP 참조)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s2-f2">2.3 기능 2 — 프로필 열람</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">✅ 확정</div>
+      망자 스프라이트를 클릭하면 이력서/입국심사서류 형태의 프로필 팝업이 표시된다. 업경 컷신 재생 중에는 비활성.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>단계</th><th>동작</th></tr></thead>
+        <tbody>
+          <tr><td>① 망자 입장</td><td>스프라이트가 화면 바깥 아래에서 책상 위(화면 중앙 하단)로 이동하며 배치</td></tr>
+          <tr><td>② 스프라이트 클릭</td><td>망자 스프라이트를 화면 바깥으로 이동, 화면 중앙에 <strong>망자 프로필 스프라이트</strong> 표시</td></tr>
+          <tr><td>③ 프로필 팝업</td><td>이력서·입국심사서류와 유사한 문서 디자인. 이름·나이·직업·사인·죄목·선행 등 텍스트+스프라이트 표시</td></tr>
+          <tr><td>④ 팝업 닫기</td><td>프로필 스프라이트 바깥 영역 클릭 → 디폴트 상태(망자 스프라이트 책상 위) 복귀</td></tr>
+          <tr><td>⑤ 비활성 조건</td><td>업경 컷신 재생 중에는 클릭 무효</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s2-f3">2.4 기능 3 — 대화창</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">✅ 확정</div>
+      화면 중앙에 <strong>메신저 앱 형태</strong>로 대화 출력. 스크롤로 이전 대화 열람 가능.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>항목</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>배치</td><td>화면 중앙(스프라이트 영역 우측) 고정 패널</td></tr>
+          <tr><td>출력 방식</td><td>메신저 앱 형태 — 망자 발화(좌측 말풍선) / 플레이어 선택지(우측 버튼 or 말풍선)</td></tr>
+          <tr><td>스크롤</td><td>이전 대화 전체 열람 가능 (세로 스크롤)</td></tr>
+          <tr><td>출력 연출</td><td>타이핑 효과(텍스트 순차 출력) 또는 즉시 표시 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>구현 참고</td><td>Unity UI Scroll View + Content Size Fitter 조합으로 동적 채팅 리스트 구현 권장</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>선택지 유형</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>유형</th><th>설명</th><th>망자 반응 경향</th><th>업경 연관성</th><th>확정 여부</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-hell">추궁하기</span></td><td>망자의 모순이나 죄목을 정면으로 지적</td><td>방어적·불안정</td><td>진실 폭로 플래그 연계 가능</td><td>✅ 확정</td></tr>
+          <tr><td><span class="badge badge-heaven">동조하기</span></td><td>망자의 주장에 공감하거나 인정</td><td>안정·상세 서술</td><td>감정 플래그 연계 가능</td><td>✅ 확정</td></tr>
+          <tr><td><span class="badge badge-neutral">중립/기타</span></td><td>사실 확인, 단순 질문</td><td>정보 제공형</td><td>단서 획득에 유리</td><td><span class="tbd-inline">TBD</span> 포함 여부 미정</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>판단 요소 가중치 (유저 체감 비율)</h4>
+    <p style="font-size:12.5px; color:var(--text-muted);">시스템 내부 수치가 아닌, 플레이어가 판정 시 <strong>체감해야 하는 정보 중요도 비율</strong>이다.</p>
+    <div class="card">
+      <div class="weight-bar-group">
+        <div class="weight-row">
+          <span class="weight-label">외형</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:5%; background: var(--text-muted);"></div></div>
+          <span class="weight-pct">5%</span>
+        </div>
+        <div class="weight-row">
+          <span class="weight-label">서류(프로필)</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:15%; background: var(--gold-dim);"></div></div>
+          <span class="weight-pct">15%</span>
+        </div>
+        <div class="weight-row">
+          <span class="weight-label">대화</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:80%; background: linear-gradient(90deg,var(--gold),var(--gold-light));"></div></div>
+          <span class="weight-pct">80%</span>
+        </div>
+      </div>
+      <p style="font-size:12.5px;">서류·외형만으로는 판단 불가. 반드시 대화를 통해 진의를 파악해야 정확한 분류가 가능하다.</p>
+    </div>
+
+    <h4>대화 진행 플로우</h4>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    A[망자 입장 스프라이트 등장] --> B{플레이어 행동}
+    B -- 프로필 클릭 --> PR[프로필 팝업 표시]
+    PR -- 바깥 클릭 --> B
+    B -- 선택지 선택 --> C[망자 반응 출력 메신저 형태]
+    C --> F{업경 플래그 충족?}
+    F -- Yes --> G[업경 컷신 재생 프로필·판정 버튼 비활성]
+    G --> C
+    F -- No --> H{판정 버튼 클릭?}
+    H -- Yes --> J[천국 / 지옥 애니메이션 업보 수치 즉시 반영]
+    H -- No --> B
+
+    style A fill:#1a1a20,stroke:#c9a84c
+    style J fill:#c9a84c,color:#0d0d0f,stroke:none
+    style G fill:#6a3a6a,color:#e8e4d8,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 대화 진행 플로우 (판정 버튼 상시 활성 반영)</div>
+    </div>
+
+    <h3 id="s2-5">2.5 업경(業鏡) 컷신 시스템</h3>
+    <div class="card-grid">
+      <div class="card">
+        <h4>업경 컷신</h4>
+        <ul class="doc-list">
+          <li>대화 중 업경 플래그 조건 충족 시 발동</li>
+          <li>해당 망자의 생전 핵심 장면 1~3개 순차 재생 후 대화 복귀</li>
+          <li>업경 재생 중 프로필 열람·판정 버튼 비활성 (확정)</li>
+          <li>스킵 가능 여부 <span class="tbd">TBD</span></li>
+          <li>업경 후 추가 선택지 해금 여부 <span class="tbd">TBD</span></li>
+          <li>1 망자당 업경 최대 횟수 <span class="review">검토필요</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>전화기 (Day 1 튜토리얼)</h4>
+        <ul class="doc-list">
+          <li>Day 1 한정 상사(신)의 업무 안내</li>
+          <li>천국/지옥 판정 기준·UI 조작법 안내</li>
+          <li>이후 Day에서의 역할 <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <h4>업경 발동 조건</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>조건 타입</th><th>설명</th><th>예시</th></tr></thead>
+        <tbody>
+          <tr><td>특정 선택지 선택</td><td>대화 트리에 지정된 선택지를 고를 경우 플래그 ON → 컷신 발동</td><td>"그가 먼저 배신했나요?" 선택 시</td></tr>
+          <tr><td>감정 임계치</td><td>대화 흐름에 따른 망자 감정 수치가 임계값 도달</td><td>극도로 불안 / 극도로 감동받았을 때</td></tr>
+          <tr><td>복합 플래그</td><td>감정 + 특정 대화 흐름 조합 충족</td><td><span class="tbd-inline">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s2-7">2.7 판정 시스템</h3>
+    <div class="callout callout-gold">
+      천국/지옥 판정의 '정답'은 서류가 아닌 대화를 통해 드러나는 <strong>진의(眞意)</strong>에 기반한다. 서류상 죄인이라도 정황에 따라 천국이 정답일 수 있으며, 반대도 성립한다.
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="badge badge-heaven" style="margin-bottom:8px;">천국 판정 기준</div>
+        <ul class="doc-list">
+          <li>진심 어린 반성 또는 정당한 사유 확인</li>
+          <li>선행이 죄목보다 유의미하게 상회</li>
+          <li>피해자가 없거나 사회적 정당성 존재</li>
+          <li>세부 기준 <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="badge badge-hell" style="margin-bottom:8px;">지옥 판정 기준</div>
+        <ul class="doc-list">
+          <li>반성 없음, 또는 죄를 정당화</li>
+          <li>피해자 다수, 반복적 악행</li>
+          <li>대화를 통한 거짓 발각</li>
+          <li>세부 기준 <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <h4>정답 판별 → 업보 수치 반영 로직</h4>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    A[플레이어 판정 언제든 실행 가능] --> B{판정 vs 정답}
+    B -- 일치 --> C[정답 해당 엔딩 업보 수치 +N]
+    B -- 불일치 --> D[오판정 의도치 않은 업보 수치 +N 정답 업보 수치 -N]
+    C & D --> E[다음 망자 or 업무 종료]
+
+    style C fill:#6ea8d8,color:#0d0d0f,stroke:none
+    style D fill:#d85a5a,color:#fff,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 판정 결과 → 업보 수치 증감 흐름 (수치 TBD) · 항목별 세부 증감은 §5.3 참조</div>
+    </div>
+
+    <h3 id="s2-8">2.8 NPC 프로필 데이터 구조</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>필드명</th><th>타입</th><th>예시</th><th>비고</th></tr></thead>
+        <tbody>
+          <tr><td>npc_id</td><td>string</td><td>"npc_001"</td><td>고유 식별자</td></tr>
+          <tr><td>name</td><td>string</td><td>"홍길동"</td><td></td></tr>
+          <tr><td>age</td><td>int</td><td>77</td><td></td></tr>
+          <tr><td>occupation</td><td>string</td><td>"기업가"</td><td></td></tr>
+          <tr><td>cause_of_death</td><td>string</td><td>"심장마비"</td><td></td></tr>
+          <tr><td>sins</td><td>string[]</td><td>["살인 1회"]</td><td>프로필에 표시되는 공식 기록</td></tr>
+          <tr><td>deeds</td><td>string[]</td><td>["기부 30년"]</td><td>선행 기록</td></tr>
+          <tr><td>true_verdict</td><td>enum</td><td>HEAVEN / HELL</td><td>정답. 플레이어에게 비공개</td></tr>
+          <tr><td>dialog_tree_id</td><td>string</td><td>"dlg_001"</td><td>대화 트리 참조 ID</td></tr>
+          <tr><td>yeomgyeong_id</td><td>string</td><td>"yk_001"</td><td>업경 컷신 참조 ID (없을 수도 있음)</td></tr>
+          <tr><td>appearance</td><td>string</td><td>"sprite_npc_001"</td><td>캐릭터 스프라이트 키</td></tr>
+          <tr><td>unlock_type</td><td>enum</td><td>STORY / TRAIT</td><td>업경 발동 조건 분류 <span class="review-inline">검토필요</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+
+  <!-- ===== 3. 직원 휴게실 ===== -->
+  <section class="section" id="s3">
+    <h2><span class="sec-num">03</span> 직원 휴게실 시스템</h2>
+
+    <h3 id="s3-0">3.0 휴게실 씬의 역할 (확정)</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">✅ 확정 — 휴게실의 두 가지 핵심 기능</div>
+      <ol class="doc-ol" style="margin-top:8px;">
+        <li><strong>업보 수치 직접 조작</strong> — 망자 분류만으로는 건드릴 수 없는 업보 수치 항목을 증감시킨다. 외부인 청탁이 주요 수단.</li>
+        <li><strong>엔딩 경로 해금</strong> — 특정 엔딩 항목은 기본적으로 비활성 상태이며, 휴게실 상호작용으로 잠금 해제되어야 해당 엔딩에 도달 가능하다.</li>
+      </ol>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <h4>휴게실 배경</h4>
+        <p>연옥-주식회사 내 직원 휴식공간 배경. 분위기 있는 이미지 연출.</p>
+      </div>
+      <div class="card">
+        <h4>외부인 등장 연출</h4>
+        <p>외부인 캐릭터 등장 이펙트 및 대화창. 등장 방식 <span class="tbd">TBD</span></p>
+      </div>
+    </div>
+
+    <h3 id="s3-1">3.1 플래그 이벤트 구조</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">📌 구상 중</div>
+      일 단위로 구분되는 플래그 이벤트가 존재할 수 있다. 이전 Day의 조건을 충족해야 다음 Day에 특정 이벤트가 해금되는 연쇄 구조.
+    </div>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    A["Day N 휴게실 조건 충족"] -- 플래그 ON --> B["Day N+1 휴게실 신규 이벤트 해금"]
+    B -- 추가 조건 충족 --> C["Day N+2 엔딩 경로 잠금 해제"]
+    C --> D["특정 업보 수치 항목 활성화 (히든 엔딩 등)"]
+
+    style D fill:#6a3a6a,color:#e8e4d8,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 플래그 이벤트 연쇄 구조 (상세 조건 TBD)</div>
+    </div>
+
+    <h3 id="s3-2">3.2 외부인 청탁 시스템</h3>
+
+    <h4>3.2.1 청탁 등장 조건</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>항목</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>등장 빈도</td><td>매 Day 발생 / 랜덤 발생 중 선택 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>복수 청탁 가능 여부</td><td>1 Day에 최대 <span class="tbd-inline">TBD</span>건</td></tr>
+          <tr><td>동일 외부인 재등장</td><td>가능. 재등장 주기 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>등장 확률 가중치</td><td>Day 진행도에 따라 특정 외부인 등장 확률 증가 <span class="review-inline">검토필요</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>3.2.2 청탁 수락/거절 분기</h4>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    A[외부인 청탁 발생] --> B{플레이어 선택}
+    B -- 수락 --> C[다음 업무에서 청탁 조건 활성화]
+    B -- 거절 --> D[외부인 반응 일반 거절 / 위협]
+    C --> E{이행 여부}
+    E -- 이행 --> F[업보 수치 변동 해당 항목 증감]
+    E -- 불이행 --> G[패널티 발동 업보 수치 감소 / 이벤트 발생]
+    D --> H[외부인 퇴장 향후 재등장 영향 가능]
+
+    style F fill:#6ea8d8,color:#0d0d0f,stroke:none
+    style G fill:#d85a5a,color:#fff,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 청탁 수락/거절/이행 분기</div>
+    </div>
+
+    <h3 id="s3-3">3.3 외부인 캐릭터 목록</h3>
+    <div class="npc-grid">
+      <div class="npc-card">
+        <div class="npc-name">⚔️ 저승사자</div>
+        <div class="npc-req">"다음에 오는 파란머리를 지옥으로 보내줘. 개인적인 원한이 있거든."</div>
+        <ul class="doc-list">
+          <li>보상: 업보 수치 <span class="tbd">TBD</span></li>
+          <li>불이행 패널티: <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+      <div class="npc-card">
+        <div class="npc-name">☁️ 신</div>
+        <div class="npc-req">"요즘 천국 인원이 많이 비는데, 애매하면 천국으로 보내도록 해."</div>
+        <ul class="doc-list">
+          <li>보상: 업보 수치 <span class="tbd">TBD</span></li>
+          <li>불이행 패널티: <span class="tbd">TBD</span></li>
+          <li>상사 포지션 — 거절 시 추가 반응 <span class="review">검토필요</span></li>
+        </ul>
+      </div>
+      <div class="npc-card">
+        <div class="npc-name">🐙 크툴루</div>
+        <div class="npc-req">"인간…바쳐라…나한테… 10명 필요하다…"</div>
+        <ul class="doc-list">
+          <li>요구: 당일 망자 중 N명 지옥 판정</li>
+          <li>보상/패널티: <span class="tbd">TBD</span></li>
+          <li>강압적 청탁 → 거절 선택지 존재 여부 <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+      <div class="npc-card">
+        <div class="npc-name">👑 파라오</div>
+        <div class="npc-req">"피라미드를 짓는데 인원이 필요해. 오늘 들어오는 모든 인원을 보내라."</div>
+        <ul class="doc-list">
+          <li>요구: 당일 전원 지옥 판정</li>
+          <li>보상/패널티: <span class="tbd">TBD</span></li>
+          <li>전원 수락 시 업보 수치 대폭 감소 예상</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ===== 4. NPC 시스템 ===== -->
+  <section class="section" id="s4">
+    <h2><span class="sec-num">04</span> NPC 시스템</h2>
+
+    <h3 id="s4-1">4.1 일반 망자 NPC 구조</h3>
+
+    <h4>4.1.1 NPC 풀 구성 방식</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>항목</th><th>내용</th></tr></thead>
+        <tbody>
+          <tr><td>총 NPC 수</td><td><span class="tbd-inline">TBD</span> (본편 기준)</td></tr>
+          <tr><td>1회차 노출 수</td><td><span class="tbd-inline">TBD</span> (10일 × 일당 N명)</td></tr>
+          <tr><td>반복 등장 여부</td><td>동일 NPC 재등장 없음 (1회차 기준)</td></tr>
+          <tr><td>언락 NPC</td><td>특정 엔딩 달성 후 해금되는 숨겨진 망자 <span class="tbd-inline">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>4.1.2 일차별 등장 규칙</h4>
+    <div class="callout callout-gold">
+      <div class="callout-title">📌 설계 원칙</div>
+      초반 Day는 비교적 판단이 명확한 NPC 배치 → 후반 Day로 갈수록 도덕적 회색지대 NPC 등장. 플레이어의 판단력을 점진적으로 시험한다.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Day 구간</th><th>난이도</th><th>NPC 특성</th></tr></thead>
+        <tbody>
+          <tr><td>Day 1~3</td><td>쉬움</td><td>죄/선행이 명확. 정답 판별 용이</td></tr>
+          <tr><td>Day 4~7</td><td>보통</td><td>복합적 서사. 대화 집중 필요</td></tr>
+          <tr><td>Day 8~10</td><td>어려움</td><td>강한 도덕적 딜레마. 외부인 청탁과 충돌 가능</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s4-2">4.2 외부인 NPC 구조</h3>
+
+    <h4>4.2.1 등장 조건</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>외부인</th><th>등장 트리거</th><th>등장 가능 Day</th></tr></thead>
+        <tbody>
+          <tr><td>저승사자</td><td>랜덤 / 특정 조건 <span class="tbd-inline">TBD</span></td><td>Day 2+ <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>신</td><td>고정 등장 또는 랜덤 <span class="tbd-inline">TBD</span></td><td>Day 1+ (상사 포지션)</td></tr>
+          <tr><td>크툴루</td><td>랜덤 / 낮은 확률 특이 이벤트</td><td>Day 5+ <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>파라오</td><td>랜덤</td><td>Day 4+ <span class="tbd-inline">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>4.2.2 외부인별 요구 및 보상/패널티 테이블</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>외부인</th><th>청탁 내용</th><th>수락+이행 보상</th><th>거절/불이행 패널티</th></tr></thead>
+        <tbody>
+          <tr><td>저승사자</td><td>특정 망자 지옥 판정</td><td>업보 수치 <span class="tbd-inline">TBD</span></td><td>업보 수치 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>신</td><td>애매한 케이스 천국 판정</td><td>업보 수치 <span class="tbd-inline">TBD</span></td><td>업보 수치 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>크툴루</td><td>N명 지옥 바침</td><td><span class="tbd-inline">TBD</span></td><td>저주 이벤트 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>파라오</td><td>당일 전원 지옥</td><td><span class="tbd-inline">TBD</span></td><td><span class="tbd-inline">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ===== 5. 업보 수치 시스템 ===== -->
+  <section class="section" id="s5">
+    <h2><span class="sec-num">05</span> 업보 수치 시스템</h2>
+
+    <h3 id="s5-1">5.1 업보 수치 개요</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">✅ 확정 — 핵심 구조</div>
+      업보 수치는 <strong>단일 점수가 아니다.</strong> 엔딩 항목 수만큼 독립적인 수치 슬롯이 존재하며, 망자 분류와 휴게실 상호작용 모두 특정 항목의 수치를 증감시킨다. <strong>게임 종료 시 가장 높은 항목에 해당하는 엔딩이 발동된다.</strong>
+    </div>
+
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    subgraph 업보수치["업보 수치 슬롯 (엔딩 수만큼 존재)"]
+        S1["신(神) 수치"]
+        S2["악마 수치"]
+        S3["평범 수치"]
+        S4["경고 수치"]
+        S5["히든 수치 (TBD)"]
+    end
+    A[망자 분류] -- 판정 결과에 따라 --> 업보수치
+    B[휴게실 상호작용] -- 청탁·플래그에 따라 --> 업보수치
+    업보수치 --> C{Day 10 종료 최고값 항목?}
+    C --> E1[엔딩 A — 드림 휴가]
+    C --> E2[엔딩 B — 평범한 직원]
+    C --> E3[엔딩 C — 경고장]
+    C --> E4[엔딩 D — 해고]
+    C --> E5[엔딩 E — 악마 채용]
+
+    style S2 fill:#3a1a1a,stroke:#d85a5a,color:#e8e4d8
+    style S1 fill:#1a2a3a,stroke:#6ea8d8,color:#e8e4d8
+    style E5 fill:#6a3a6a,color:#e8e4d8,stroke:none
+    style E1 fill:#c9a84c,color:#0d0d0f,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 업보 수치 구조 — 항목별 독립 증감, 최고값 엔딩 발동</div>
+    </div>
+
+    <h3 id="s5-2">5.2 업보 수치 항목 테이블</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>항목명</th><th>연결 엔딩</th><th>주요 증가 조건</th><th>주요 감소 조건</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-heaven">신(神) 수치</span></td>
+            <td>엔딩 A (드림 휴가)</td>
+            <td>착한 망자 정확 판정, 신 청탁 이행</td>
+            <td>착한 망자 오판정, 악마 청탁 이행</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-neutral">평범 수치</span></td>
+            <td>엔딩 B (평범한 직원)</td>
+            <td>다수 망자 무난 처리, 청탁 거절</td>
+            <td>극단적 선택 반복</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-neutral">경고 수치</span></td>
+            <td>엔딩 C (경고장)</td>
+            <td>오판정 누적, 청탁 불이행</td>
+            <td><span class="tbd-inline">TBD</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-hell">해고 수치</span></td>
+            <td>엔딩 D (해고)</td>
+            <td>오판정 다수, 업무 태만</td>
+            <td><span class="tbd-inline">TBD</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-hell">악마 수치</span></td>
+            <td>엔딩 E (악마 채용, 히든)</td>
+            <td>악의적 오판정 누적, 크툴루·파라오 청탁 이행</td>
+            <td>선행 망자 정확 판정</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-neutral">히든 수치 +</span></td>
+            <td>엔딩 F+ (TBD)</td>
+            <td colspan="2"><span class="tbd-inline">TBD</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s5-3">5.3 증감 이벤트 상세</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>이벤트</th><th>영향 항목</th><th>변화량</th></tr></thead>
+        <tbody>
+          <tr><td>착한 망자 → 천국 (정답)</td><td>신 수치↑</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>착한 망자 → 지옥 (오판정)</td><td>악마 수치↑ / 신 수치↓</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>나쁜 망자 → 지옥 (정답)</td><td>평범 수치↑</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>나쁜 망자 → 천국 (오판정)</td><td>경고 수치↑</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>신(神) 청탁 이행</td><td>신 수치↑</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>악마(크툴루·파라오) 청탁 이행</td><td>악마 수치↑ / 신 수치↓</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>휴게실 플래그 이벤트 조건 충족</td><td>항목별 상이</td><td><span class="tbd-inline">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s5-4">5.4 Day 10 종료 처리 로직</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    A[Day 10 휴게실 종료] --> B[전체 업보 수치 항목 확인]
+    B --> C{최고값 항목}
+    C -- 신 수치 최고 --> E1[엔딩 A]
+    C -- 평범 수치 최고 --> E2[엔딩 B]
+    C -- 경고 수치 최고 --> E3[엔딩 C]
+    C -- 해고 수치 최고 --> E4[엔딩 D]
+    C -- 악마 수치 최고 --> E5[엔딩 E]
+    C -- 동점 처리 --> TIE[동점 시 우선순위 규칙 적용 TBD]
+
+    style E1 fill:#c9a84c,color:#0d0d0f,stroke:none
+    style E5 fill:#6a3a6a,color:#e8e4d8,stroke:none
+    style E4 fill:#d85a5a,color:#fff,stroke:none
+    style TIE fill:#2a2a3a,color:#a09888,stroke:#5a5a7a
+      </div>
+      <div class="diagram-caption">▲ Day 10 종료 후 최고값 업보 항목 → 엔딩 분기 (동점 처리 TBD)</div>
+    </div>
+  </section>
+
+
+  <!-- ===== 6. 엔딩 시스템 ===== -->
+  <section class="section" id="s6">
+    <h2><span class="sec-num">06</span> 엔딩 시스템</h2>
+
+    <h3 id="s6-1">6.1 엔딩 분기 구조</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">✅ 확정 — 엔딩 발동 방식</div>
+      단일 점수 구간 판정이 아님. <strong>10일 종료 시점에 가장 높은 업보 수치 항목의 엔딩이 발동된다.</strong> §5장 참조.
+    </div>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart TD
+    A["Day 10 종료 업보 수치 항목 비교"] --> B{최고값 항목}
+    B -- "신 수치 1위" --> E1["엔딩 A : 드림 휴가 정직한 심판자"]
+    B -- "평범 수치 1위" --> E2["엔딩 B : 평범한 직원 무난한 10일"]
+    B -- "경고 수치 1위" --> E3["엔딩 C : 경고장 실수 누적"]
+    B -- "해고 수치 1위" --> E4["엔딩 D : 해고 형편없는 업무"]
+    B -- "악마 수치 1위" --> E5["엔딩 E : 악마 채용 (히든) 악행 축적"]
+    B -- "TBD 수치 1위" --> E6["엔딩 F+ : 히든 TBD"]
+    B -- "동점" --> TIE["동점 우선순위 처리 TBD"]
+
+    style E1 fill:#c9a84c,color:#0d0d0f,stroke:none
+    style E4 fill:#d85a5a,color:#fff,stroke:none
+    style E5 fill:#6a3a6a,color:#e8e4d8,stroke:none
+    style E6 fill:#2a2a3a,color:#a09888,stroke:#5a5a7a
+    style TIE fill:#2a2a3a,color:#a09888,stroke:#5a5a7a
+      </div>
+      <div class="diagram-caption">▲ 엔딩 분기 구조 — 업보 수치 최고값 항목 발동</div>
+    </div>
+
+    <h3 id="s6-2">6.2 엔딩 조건 테이블</h3>
+    <div class="ending-grid">
+      <div class="ending-card">
+        <div class="ending-name"><span class="badge badge-gold">엔딩 A</span> 드림 휴가</div>
+        <ul class="doc-list">
+          <li>발동: <span class="badge badge-heaven">신 수치</span> 최고값</li>
+          <li>연출: 휴가 목적지 일러스트 + 엔딩 크레딧</li>
+          <li>해금 보상: 일러스트 1종 <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+      <div class="ending-card">
+        <div class="ending-name"><span class="badge badge-neutral">엔딩 B</span> 평범한 직원</div>
+        <ul class="doc-list">
+          <li>발동: <span class="badge badge-neutral">평범 수치</span> 최고값</li>
+          <li>연출: 짧은 일상 컷신</li>
+          <li>해금 보상: <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+      <div class="ending-card">
+        <div class="ending-name"><span class="badge badge-neutral">엔딩 C</span> 경고장</div>
+        <ul class="doc-list">
+          <li>발동: <span class="badge badge-neutral">경고 수치</span> 최고값</li>
+          <li>연출: 상사의 경고 편지</li>
+          <li>해금 보상: <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+      <div class="ending-card">
+        <div class="ending-name"><span class="badge badge-hell">엔딩 D</span> 해고</div>
+        <ul class="doc-list">
+          <li>발동: <span class="badge badge-hell">해고 수치</span> 최고값</li>
+          <li>연출: "당신은 해고됐습니다." 연출</li>
+          <li>해금 보상: <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+      <div class="ending-card">
+        <div class="ending-name"><span class="badge badge-hell">엔딩 E</span> 악마 채용 (히든)</div>
+        <ul class="doc-list">
+          <li>발동: <span class="badge badge-hell">악마 수치</span> 최고값 + 휴게실 잠금 해제 조건 충족</li>
+          <li>연출: 악마 일러스트 해금 + 채용 연출</li>
+          <li>해금 보상: 전용 일러스트</li>
+        </ul>
+      </div>
+      <div class="ending-card">
+        <div class="ending-name"><span class="badge badge-neutral">엔딩 F+</span> 추가 히든 <span class="tbd">TBD</span></div>
+        <ul class="doc-list">
+          <li>발동: <span class="tbd">TBD</span> 수치 최고값</li>
+          <li>연출: <span class="tbd">TBD</span></li>
+          <li>해금 보상: <span class="tbd">TBD</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="s6-3">6.3 업적 &amp; 일러스트 해금 시스템</h3>
+    <h4>6.3.1 해금 방식</h4>
+    <p>미연시 방식의 해금 시스템을 차용. 특정 조건(엔딩 달성, 특정 NPC 관련 선택지 선택 등)을 충족 시 일러스트·스토리가 해금된다. 재플레이 유도의 핵심 동기.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>해금 타입</th><th>트리거 조건</th><th>보상</th></tr></thead>
+        <tbody>
+          <tr><td>엔딩 일러스트</td><td>각 엔딩 달성</td><td>엔딩 전용 일러스트 1종</td></tr>
+          <tr><td>캐릭터 일러스트</td><td>특정 NPC 업경 발동</td><td>해당 망자 일러스트</td></tr>
+          <tr><td>악마 일러스트</td><td>히든 엔딩 E 달성</td><td>악마 전용 일러스트</td></tr>
+          <tr><td>업적</td><td>특수 플레이 조건 <span class="tbd-inline">TBD</span></td><td>업적 뱃지 + 부가 보상 <span class="tbd-inline">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ===== 7. UI/UX 흐름 ===== -->
+  <section class="section" id="s7">
+    <h2><span class="sec-num">07</span> UI / UX 흐름</h2>
+
+    <h3 id="s7-1">7.1 전체 화면 전환 플로우</h3>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    TL[타이틀 화면] --> OP[오프닝 / 설정 화면]
+    OP --> DY[Day 시작 연출]
+    DY --> CL[망자 분류 씬 메인 플레이 공간]
+    CL -- 업무 완료 --> LB[직원 휴게실 씬]
+    LB -- 퇴근 --> ER{Day 10?}
+    ER -- No --> DY
+    ER -- Yes --> ED[엔딩 화면 업보 수치 최고값 엔딩 발동]
+    ED --> GL[갤러리 / 해금 화면]
+    GL --> TL
+
+    style TL fill:#1a1a20,stroke:#c9a84c
+    style ED fill:#c9a84c,color:#0d0d0f,stroke:none
+      </div>
+      <div class="diagram-caption">▲ 전체 화면 전환 플로우</div>
+    </div>
+
+    <h3 id="s7-2">7.2 망자 분류 화면 UI 레이아웃</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">레이아웃 구성 원칙</div>
+      프로필(좌측) / 대화+선택지(중앙) / 판정 버튼(하단 고정) 3분할 기본 구성.
+      해상도 기준: 1920×1080 기준 설계, 16:9 대응. 세부 수치 <span class="tbd-inline">WIP</span>
+    </div>
+
+    <div class="svg-mockup-wrap" style="margin-bottom:20px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 500" width="820" height="500" style="background:#0d0d0f; border:1px solid rgba(201,168,76,0.3); border-radius:8px; display:block;">
+        <rect width="820" height="500" fill="#0d0d0f"/>
+        <text x="410" y="18" text-anchor="middle" font-family="monospace" font-size="11" fill="#5a5650">[ 1920 × 1080 기준 — 비율 표현 목업 / v1.2 대화창 우측 메신저형 ]</text>
+
+        <!-- ① 좌측: 망자 스프라이트 + 프로필 팝업 영역 -->
+        <rect x="10" y="28" width="220" height="462" rx="6" fill="#141418" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+        <!-- 망자 스프라이트 -->
+        <rect x="26" y="44" width="188" height="240" rx="4" fill="#1a1a20" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+        <text x="120" y="155" text-anchor="middle" font-family="monospace" font-size="13" fill="#5a5650">망자 스프라이트</text>
+        <text x="120" y="173" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a3a40">↑ 책상 위로 이동 입장</text>
+        <text x="120" y="191" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a3a40">클릭 → 프로필 팝업</text>
+        <!-- 클릭 표시 -->
+        <circle cx="120" cy="215" r="12" fill="none" stroke="rgba(201,168,76,0.4)" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <text x="120" y="219" text-anchor="middle" font-family="monospace" font-size="9" fill="#c9a84c">클릭</text>
+        <!-- 프로필 팝업 미리보기 -->
+        <rect x="26" y="295" width="188" height="150" rx="4" fill="#1a1a20" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+        <text x="120" y="314" text-anchor="middle" font-family="monospace" font-size="10" fill="#c9a84c">[ 프로필 팝업 ]</text>
+        <text x="120" y="330" text-anchor="middle" font-family="monospace" font-size="10" fill="#5a5650">이력서·심사서류 형태</text>
+        <text x="36" y="348" font-family="monospace" font-size="10" fill="#a09888">이름: 홍길동  나이: 77</text>
+        <text x="36" y="364" font-family="monospace" font-size="10" fill="#a09888">직업: 기업가  사인: 심장마비</text>
+        <line x1="36" y1="372" x2="204" y2="372" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>
+        <text x="36" y="387" font-family="monospace" font-size="10" fill="#d85a5a">죄목: 살인 1회</text>
+        <text x="36" y="402" font-family="monospace" font-size="10" fill="#6ea8d8">선행: 기부 30년</text>
+        <text x="120" y="432" text-anchor="middle" font-family="monospace" font-size="9" fill="#5a5650">바깥 클릭 → 닫기</text>
+        <text x="120" y="470" text-anchor="middle" font-family="monospace" font-size="10" fill="#5a5650">[ 스프라이트 영역 ] ≈28%</text>
+
+        <!-- ② 중앙: 메신저형 대화창 -->
+        <rect x="240" y="28" width="340" height="462" rx="6" fill="#141418" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+        <text x="410" y="50" text-anchor="middle" font-family="monospace" font-size="10" fill="#c9a84c">[ 메신저형 대화창 — 스크롤 열람 가능 ]</text>
+        <!-- 망자 말풍선 (좌측) -->
+        <rect x="256" y="60" width="200" height="36" rx="6" fill="#1e1e28" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+        <polygon points="256,72 244,78 256,84" fill="#1e1e28"/>
+        <text x="266" y="81" font-family="monospace" font-size="10" fill="#e8e4d8">"저는 천국에 가야합니다."</text>
+        <!-- 망자 말풍선 2 -->
+        <rect x="256" y="106" width="220" height="36" rx="6" fill="#1e1e28" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+        <polygon points="256,118 244,124 256,130" fill="#1e1e28"/>
+        <text x="266" y="127" font-family="monospace" font-size="10" fill="#e8e4d8">"평생을 남을 도왔어요.."</text>
+        <!-- 플레이어 선택지 (우측) -->
+        <rect x="390" y="154" width="174" height="32" rx="6" fill="rgba(110,168,216,0.15)" stroke="rgba(110,168,216,0.4)" stroke-width="1"/>
+        <text x="556" y="174" text-anchor="end" font-family="monospace" font-size="10" fill="#6ea8d8">▶ 동조하기</text>
+        <rect x="390" y="194" width="174" height="32" rx="6" fill="rgba(216,90,90,0.12)" stroke="rgba(216,90,90,0.35)" stroke-width="1"/>
+        <text x="556" y="214" text-anchor="end" font-family="monospace" font-size="10" fill="#d85a5a">▶ 추궁하기</text>
+        <!-- 업경 알림 -->
+        <rect x="256" y="240" width="298" height="44" rx="4" fill="rgba(201,168,76,0.06)" stroke="rgba(201,168,76,0.25)" stroke-dasharray="4,3"/>
+        <text x="405" y="258" text-anchor="middle" font-family="monospace" font-size="10" fill="#c9a84c">✦ 업경 플래그 충족</text>
+        <text x="405" y="274" text-anchor="middle" font-family="monospace" font-size="9" fill="#7a6330">→ 컷신 전환 (프로필·판정 버튼 비활성)</text>
+        <!-- 이전 대화 스크롤 표시 -->
+        <text x="405" y="310" text-anchor="middle" font-family="monospace" font-size="9" fill="#3a3630">↑ 스크롤로 이전 대화 열람 가능</text>
+        <!-- 판정 버튼 영역 -->
+        <rect x="256" y="390" width="308" height="84" rx="4" fill="#141420" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+        <text x="410" y="408" text-anchor="middle" font-family="monospace" font-size="9" fill="#5a5650">[ 판정 버튼 — 대화 중 언제든 활성 ]</text>
+        <rect x="264" y="416" width="136" height="48" rx="6" fill="rgba(110,168,216,0.15)" stroke="rgba(110,168,216,0.6)" stroke-width="2"/>
+        <text x="332" y="436" text-anchor="middle" font-family="'Cinzel',serif" font-size="12" fill="#6ea8d8">HEAVEN ↑</text>
+        <text x="332" y="452" text-anchor="middle" font-family="monospace" font-size="9" fill="#6ea8d8">천국</text>
+        <rect x="416" y="416" width="136" height="48" rx="6" fill="rgba(216,90,90,0.15)" stroke="rgba(216,90,90,0.6)" stroke-width="2"/>
+        <text x="484" y="436" text-anchor="middle" font-family="'Cinzel',serif" font-size="12" fill="#d85a5a">HELL ↓</text>
+        <text x="484" y="452" text-anchor="middle" font-family="monospace" font-size="9" fill="#d85a5a">지옥</text>
+        <text x="410" y="488" text-anchor="middle" font-family="monospace" font-size="10" fill="#5a5650">[ 메신저형 대화창 + 판정 버튼 ] ≈42%</text>
+
+        <!-- ③ 우측: 보조 HUD -->
+        <rect x="590" y="28" width="222" height="462" rx="6" fill="#141418" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+        <!-- 업무 현황 -->
+        <rect x="604" y="44" width="194" height="90" rx="4" fill="#1a1a20" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>
+        <text x="701" y="62" text-anchor="middle" font-family="monospace" font-size="10" fill="#c9a84c">[ 업무 현황 ]</text>
+        <text x="614" y="78" font-family="monospace" font-size="11" fill="#a09888">Day 3 / 10</text>
+        <rect x="614" y="86" width="160" height="6" rx="3" fill="#1e1e28"/>
+        <rect x="614" y="86" width="48" height="6" rx="3" fill="#c9a84c"/>
+        <text x="614" y="108" font-family="monospace" font-size="10" fill="#6ea8d8">✔ 정답  3건</text>
+        <text x="614" y="122" font-family="monospace" font-size="10" fill="#d85a5a">✘ 오답  1건</text>
+        <!-- 업보 수치 미니 게이지 -->
+        <rect x="604" y="146" width="194" height="140" rx="4" fill="#1a1a20" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>
+        <text x="701" y="164" text-anchor="middle" font-family="monospace" font-size="10" fill="#c9a84c">[ 업보 수치 ]</text>
+        <text x="614" y="182" font-family="monospace" font-size="10" fill="#6ea8d8">신 수치</text>
+        <rect x="660" y="174" width="128" height="8" rx="4" fill="#1e1e28"/>
+        <rect x="660" y="174" width="80" height="8" rx="4" fill="rgba(110,168,216,0.7)"/>
+        <text x="614" y="202" font-family="monospace" font-size="10" fill="#d85a5a">악마 수치</text>
+        <rect x="660" y="194" width="128" height="8" rx="4" fill="#1e1e28"/>
+        <rect x="660" y="194" width="30" height="8" rx="4" fill="rgba(216,90,90,0.7)"/>
+        <text x="614" y="222" font-family="monospace" font-size="10" fill="#a09888">평범 수치</text>
+        <rect x="660" y="214" width="128" height="8" rx="4" fill="#1e1e28"/>
+        <rect x="660" y="214" width="55" height="8" rx="4" fill="rgba(160,152,136,0.6)"/>
+        <text x="701" y="260" text-anchor="middle" font-family="monospace" font-size="9" fill="#5a5650">※ 수치 TBD</text>
+        <!-- 전화기 -->
+        <rect x="604" y="298" width="194" height="68" rx="4" fill="#1a1a20" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>
+        <text x="701" y="318" text-anchor="middle" font-family="monospace" font-size="10" fill="#c9a84c">[ 전화기 ]</text>
+        <text x="701" y="342" text-anchor="middle" font-family="monospace" font-size="22" fill="#7a6330">☎</text>
+        <text x="701" y="358" text-anchor="middle" font-family="monospace" font-size="9" fill="#5a5650">Day 1 상사 안내</text>
+        <text x="701" y="470" text-anchor="middle" font-family="monospace" font-size="10" fill="#5a5650">[ 보조 HUD ] ≈27%</text>
+      </svg>
+      <div class="diagram-caption">▲ 망자 분류 화면 UI 가배치 목업 v1.2 — 대화창 메신저형·업보 수치 게이지 반영</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>영역</th><th>위치</th><th>비율(안)</th><th>주요 요소</th><th>비고</th></tr></thead>
+        <tbody>
+          <tr><td>NPC 프로필</td><td>좌측 패널</td><td>~28%</td><td>캐릭터 일러스트, 기본 정보, 죄목/선행</td><td></td></tr>
+          <tr><td>대화 텍스트</td><td>중앙 상단</td><td>~44%</td><td>발화 텍스트, 선택지 버튼(2~3개)</td><td></td></tr>
+          <tr><td>판정 버튼</td><td>중앙 하단</td><td>중앙 내</td><td>천국↑ / 지옥↓</td><td>대화 종료 전 비활성 여부 <span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>보조 HUD</td><td>우측 패널</td><td>~23%</td><td>업무 현황, 전화기, 업보 게이지</td><td>Day 1: 전화기 강조</td></tr>
+          <tr><td>업경 컷신</td><td>전체 오버레이</td><td>100%</td><td>컷신 연출 + 스킵 버튼</td><td>발동 시만 표시</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s7-3">7.3 직원 휴게실 화면 UI 레이아웃</h3>
+    <div class="svg-mockup-wrap" style="margin-bottom:20px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 420" width="820" height="420" style="background:#0d0d0f; border:1px solid rgba(201,168,76,0.3); border-radius:8px; display:block;">
+        <rect width="820" height="420" fill="#0d0d0f"/>
+        <text x="410" y="18" text-anchor="middle" font-family="monospace" font-size="11" fill="#5a5650">[ 직원 휴게실 화면 — 비율 표현 목업 ]</text>
+
+        <!-- 배경 영역 전체 -->
+        <rect x="10" y="28" width="800" height="310" rx="6" fill="#141418" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+        <text x="410" y="60" text-anchor="middle" font-family="monospace" font-size="12" fill="#3a3630">[ 배경 일러스트 — 연옥주식회사 직원 휴게실 ]</text>
+
+        <!-- 외부인 캐릭터 영역 -->
+        <rect x="270" y="50" width="280" height="200" rx="6" fill="rgba(201,168,76,0.04)" stroke="rgba(201,168,76,0.25)" stroke-dasharray="5,3" stroke-width="1.5"/>
+        <text x="410" y="128" text-anchor="middle" font-family="monospace" font-size="28" fill="#5a5650">👤</text>
+        <text x="410" y="160" text-anchor="middle" font-family="monospace" font-size="12" fill="#7a6330">외부인 스프라이트</text>
+        <text x="410" y="178" text-anchor="middle" font-family="monospace" font-size="10" fill="#5a5650">[ 중앙 배치 / 인물별 교체 ]</text>
+
+        <!-- 발화창 -->
+        <rect x="100" y="258" width="620" height="64" rx="6" fill="#1a1a20" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+        <polygon points="250,258 270,240 290,258" fill="#1a1a20" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+        <text x="200" y="282" font-family="monospace" font-size="10" fill="#c9a84c">[ 외부인 ]</text>
+        <text x="200" y="300" font-family="monospace" font-size="11" fill="#e8e4d8">"다음에 오는 파란머리를 지옥으로 보내줘."</text>
+        <text x="540" y="310" font-family="monospace" font-size="9" fill="#5a5650">▼ 계속</text>
+
+        <!-- 선택지 버튼 영역 -->
+        <rect x="10" y="346" width="800" height="64" rx="0" fill="#141418" stroke="none"/>
+        <rect x="180" y="354" width="160" height="42" rx="6" fill="#1a1a20" stroke="rgba(110,168,216,0.5)" stroke-width="1.5"/>
+        <text x="260" y="381" text-anchor="middle" font-family="monospace" font-size="12" fill="#6ea8d8">✔ 수락하기</text>
+        <rect x="360" y="354" width="160" height="42" rx="6" fill="#1a1a20" stroke="rgba(216,90,90,0.5)" stroke-width="1.5"/>
+        <text x="440" y="381" text-anchor="middle" font-family="monospace" font-size="12" fill="#d85a5a">✘ 거절하기</text>
+        <!-- 업무 시작 버튼 -->
+        <rect x="610" y="354" width="150" height="42" rx="6" fill="rgba(201,168,76,0.15)" stroke="rgba(201,168,76,0.6)" stroke-width="1.5"/>
+        <text x="685" y="381" text-anchor="middle" font-family="monospace" font-size="12" fill="#c9a84c">▶ 업무 시작</text>
+
+        <!-- 범례 -->
+        <text x="410" y="408" text-anchor="middle" font-family="monospace" font-size="10" fill="#5a5650">[ 수락/거절 후 → 업무 시작 버튼 활성화 ]  |  외부인 없을 시 업무 시작 버튼만 표시</text>
+      </svg>
+      <div class="diagram-caption">▲ 직원 휴게실 화면 UI 가배치 목업</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>영역</th><th>위치</th><th>주요 요소</th></tr></thead>
+        <tbody>
+          <tr><td>배경</td><td>전체 화면</td><td>휴게실 배경 일러스트 (연옥주식회사 내부)</td></tr>
+          <tr><td>외부인 스프라이트</td><td>중앙</td><td>외부인 캐릭터 이미지 (인물별 교체)</td></tr>
+          <tr><td>발화창</td><td>하단 중앙</td><td>청탁 대사 텍스트 + 말풍선</td></tr>
+          <tr><td>선택 버튼</td><td>최하단 바</td><td>수락 / 거절 (외부인 등장 시만 표시)</td></tr>
+          <tr><td>업무 시작 버튼</td><td>최하단 우측</td><td>청탁 처리 후 다음 Day로 전환</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+  </section>
+
+  <!-- ===== 8. 데이터 테이블 ===== -->
+  <section class="section" id="s8">
+    <h2><span class="sec-num">08</span> 데이터 테이블</h2>
+
+    <h3 id="s8-0">8.0 CSV 기반 데이터 관리 구조</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">📌 데이터 관리 원칙</div>
+      모든 NPC·대화·엔딩 데이터는 <strong>CSV 파일로 외부 관리</strong>한다. 코드 수정 없이 데이터 파일만 교체하면 신규 NPC·DLC 콘텐츠를 즉시 반영할 수 있다. Unity의 <code>Resources.Load</code> 또는 StreamingAssets 경로로 런타임 로드.
+    </div>
+
+    <h4>CSV 파일 목록 및 역할</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>파일명</th><th>역할</th><th>주요 컬럼</th><th>비고</th></tr></thead>
+        <tbody>
+          <tr><td><code>npc_data.csv</code></td><td>망자 NPC 기본 정보</td><td>npc_id, name, age, occupation, cause_of_death, sins, deeds, true_verdict, dialog_tree_id, yeomgyeong_id, appear_day</td><td>행 추가만으로 NPC 확장</td></tr>
+          <tr><td><code>dialog_data.csv</code></td><td>대화 트리 전체</td><td>dialog_id, npc_id, seq, speaker, text, choice_1, choice_1_next, choice_2, choice_2_next, choice_3, choice_3_next, yeomgyeong_trigger</td><td>1행 = 1개 대화 노드</td></tr>
+          <tr><td><code>outsider_data.csv</code></td><td>외부인 NPC 정보</td><td>ext_id, name, request_type, target_condition, reward_score, penalty_score, appear_day_min, appear_day_max, appear_weight</td><td></td></tr>
+          <tr><td><code>ending_data.csv</code></td><td>엔딩 분기 조건</td><td>ending_id, name, score_min, score_max, special_condition, unlock_reward, description</td><td></td></tr>
+          <tr><td><code>score_table.csv</code></td><td>업보 수치 환산</td><td>event_type, score_delta, description</td><td></td></tr>
+          <tr><td><code>asset_map.csv</code></td><td>에셋 키-경로 매핑</td><td>asset_id, asset_type, file_path, description</td><td>스프라이트·오디오 참조용</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>npc_data.csv 샘플</h4>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <pre class="csv-block" style="
+        background:#0d0d0f;
+        color:#a09888;
+        font-family:'Courier New',monospace;
+        font-size:12px;
+        line-height:1.7;
+        padding:18px 20px;
+        overflow-x:auto;
+        margin:0;
+        border-radius:8px;
+      "><span style="color:#c9a84c;">npc_id</span>,<span style="color:#c9a84c;">name</span>,<span style="color:#c9a84c;">age</span>,<span style="color:#c9a84c;">occupation</span>,<span style="color:#c9a84c;">cause_of_death</span>,<span style="color:#c9a84c;">sins</span>,<span style="color:#c9a84c;">deeds</span>,<span style="color:#c9a84c;">true_verdict</span>,<span style="color:#c9a84c;">dialog_tree_id</span>,<span style="color:#c9a84c;">yeomgyeong_id</span>,<span style="color:#c9a84c;">appear_day</span>
+npc_001,홍길동,77,기업가,심장마비,살인1회,기부30년,HEAVEN,dlg_001,yk_001,2
+npc_002,구미호,,요괴,,가족몰살,,TBD,dlg_002,,TBD
+npc_003,TBD,TBD,TBD,TBD,TBD,TBD,TBD,dlg_003,,TBD</pre>
+    </div>
+
+    <h4>dialog_data.csv 샘플</h4>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <pre class="csv-block" style="
+        background:#0d0d0f;
+        color:#a09888;
+        font-family:'Courier New',monospace;
+        font-size:12px;
+        line-height:1.7;
+        padding:18px 20px;
+        overflow-x:auto;
+        margin:0;
+        border-radius:8px;
+      "><span style="color:#c9a84c;">dialog_id</span>,<span style="color:#c9a84c;">npc_id</span>,<span style="color:#c9a84c;">seq</span>,<span style="color:#c9a84c;">speaker</span>,<span style="color:#c9a84c;">text</span>,<span style="color:#c9a84c;">choice_1</span>,<span style="color:#c9a84c;">c1_next</span>,<span style="color:#c9a84c;">choice_2</span>,<span style="color:#c9a84c;">c2_next</span>,<span style="color:#c9a84c;">choice_3</span>,<span style="color:#c9a84c;">c3_next</span>,<span style="color:#c9a84c;">yeomgyeong_trigger</span>
+dlg_001,npc_001,1,NPC,저는 천국에 가야 합니다,동조하기,dlg_001_2a,추궁하기,dlg_001_2b,사실 확인,dlg_001_2c,FALSE
+dlg_001_2a,npc_001,2,NPC,평생을 남을 도왔어요,추궁하기,dlg_001_3b,,,,,FALSE
+dlg_001_2b,npc_001,2,NPC,여기 있는 살인은 뭐죠?,,,동조하기,dlg_001_3a,,,TRUE
+dlg_001_3a,npc_001,3,NPC,그건… 진짜 제 탓이 아니에요!,,,,,,,FALSE</pre>
+    </div>
+
+    <h4>CSV ↔ Unity 연동 흐름</h4>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    A[CSV 파일 npc_data.csv dialog_data.csv ...] --> B[DataManager CSV Parser Unity C#]
+    B --> C[(런타임 데이터 NPCData[] DialogNode[])]
+    C --> D[GameFlowManager]
+    D --> E[DialogSystem]
+    D --> F[NPCSpawner]
+    D --> G[ScoreManager]
+
+    style A fill:#1a1a20,stroke:#c9a84c
+    style C fill:#1a1a20,stroke:#6ea8d8
+      </div>
+      <div class="diagram-caption">▲ CSV 데이터 → Unity 런타임 연동 흐름</div>
+    </div>
+    <div class="callout callout-gold">전체 NPC 목록은 별도 NPC 기획서에서 관리. 본 테이블은 구조 확인용 샘플이다.</div>
+
+    <h3 id="s8-1">8.1 망자 NPC 데이터 테이블 (샘플)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>이름</th><th>나이</th><th>직업</th><th>사인</th><th>주요 죄목</th><th>정답</th><th>등장 Day</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>npc_001</td><td>홍길동</td><td>77</td><td>기업가</td><td>심장마비</td>
+            <td>살인 1회</td>
+            <td><span class="badge badge-heaven">천국</span></td>
+            <td><span class="tbd-inline">TBD</span></td>
+          </tr>
+          <tr>
+            <td>npc_002</td><td>구미호</td><td>—</td><td>요괴</td><td>—</td>
+            <td>가족 몰살</td>
+            <td><span class="tbd-inline">TBD</span></td>
+            <td><span class="tbd-inline">TBD</span></td>
+          </tr>
+          <tr>
+            <td>npc_003~</td><td colspan="7" style="color:var(--text-muted);">이하 별도 NPC 기획서 참조 <span class="wip-inline">WIP</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s8-2">8.2 외부인 NPC 데이터 테이블</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>이름</th><th>청탁 유형</th><th>등장 Day 범위</th><th>등장 가중치</th></tr></thead>
+        <tbody>
+          <tr><td>ext_001</td><td>저승사자</td><td>특정 대상 지옥</td><td><span class="tbd-inline">TBD</span></td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>ext_002</td><td>신</td><td>천국 편향 유도</td><td><span class="tbd-inline">TBD</span></td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>ext_003</td><td>크툴루</td><td>N명 지옥 바침</td><td><span class="tbd-inline">TBD</span></td><td><span class="tbd-inline">TBD</span> (낮음)</td></tr>
+          <tr><td>ext_004</td><td>파라오</td><td>전원 지옥</td><td><span class="tbd-inline">TBD</span></td><td><span class="tbd-inline">TBD</span> (낮음)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s8-3">8.3 엔딩 조건 데이터 테이블</h3>
+    <div class="callout callout-gold" style="margin-bottom:12px;">
+      엔딩 발동 방식: 단일 점수 구간이 아닌 <strong>업보 수치 항목 최고값</strong>. §5장 참조.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>엔딩 ID</th><th>이름</th><th>발동 조건 (업보 수치 최고값 항목)</th><th>추가 조건</th><th>해금 보상</th></tr></thead>
+        <tbody>
+          <tr><td>end_A</td><td>드림 휴가</td><td><span class="badge badge-heaven">신 수치</span> 최고값</td><td>없음</td><td>일러스트 A</td></tr>
+          <tr><td>end_B</td><td>평범한 직원</td><td><span class="badge badge-neutral">평범 수치</span> 최고값</td><td>없음</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>end_C</td><td>경고장</td><td><span class="badge badge-neutral">경고 수치</span> 최고값</td><td>없음</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>end_D</td><td>해고</td><td><span class="badge badge-hell">해고 수치</span> 최고값</td><td>없음</td><td><span class="tbd-inline">TBD</span></td></tr>
+          <tr><td>end_E</td><td>악마 채용</td><td><span class="badge badge-hell">악마 수치</span> 최고값</td><td>휴게실 잠금 해제 조건 충족 필요 <span class="tbd-inline">TBD</span></td><td>악마 일러스트</td></tr>
+          <tr><td>end_F+</td><td>히든</td><td><span class="tbd-inline">TBD</span> 수치 최고값</td><td><span class="tbd-inline">TBD</span></td><td><span class="tbd-inline">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s8-4">8.4 업보 수치 항목별 증감 기준</h3>
+    <p style="color:var(--text-muted); font-size:12.5px;">구버전 '점수 구간 → 등급' 방식 폐기. §5.3 증감 이벤트 상세와 연동하는 요약 참조표.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>업보 항목</th><th>주요 증가 이벤트</th><th>주요 감소 이벤트</th><th>연결 엔딩</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-heaven">신 수치</span></td>
+            <td>착한 망자 → 천국 (정답), 신 청탁 이행</td>
+            <td>착한 망자 오판정, 악마 청탁 이행</td>
+            <td>엔딩 A (드림 휴가)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-neutral">평범 수치</span></td>
+            <td>나쁜 망자 → 지옥 (정답), 청탁 거절</td>
+            <td>극단적 선택 반복</td>
+            <td>엔딩 B (평범한 직원)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-neutral">경고 수치</span></td>
+            <td>나쁜 망자 → 천국 (오판정), 청탁 불이행</td>
+            <td><span class="tbd-inline">TBD</span></td>
+            <td>엔딩 C (경고장)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-hell">해고 수치</span></td>
+            <td>오판정 다수, 업무 태만</td>
+            <td><span class="tbd-inline">TBD</span></td>
+            <td>엔딩 D (해고)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-hell">악마 수치</span></td>
+            <td>악의적 오판정 누적, 크툴루·파라오 청탁 이행</td>
+            <td>선행 망자 정확 판정</td>
+            <td>엔딩 E (악마 채용)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-neutral">히든 수치</span></td>
+            <td colspan="3"><span class="tbd-inline">TBD</span> — 엔딩 F+ 연결</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <!-- ===== 9. DLC 확장 설계 ===== -->
+  <section class="section" id="s9">
+    <h2><span class="sec-num">09</span> 확장성 설계 (DLC)</h2>
+
+    <h3 id="s9-1">9.1 기본 시스템 확장 구조</h3>
+    <div class="callout callout-gold">
+      <div class="callout-title">📌 설계 원칙</div>
+      메인 시스템(망자 분류·대화·판정·엔딩)을 그대로 유지하면서, <strong>캐릭터·다이얼로그·시나리오 데이터만 교체·추가</strong>함으로써 낮은 비용으로 빠른 확장이 가능하다.
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <h4>확장 가능 요소</h4>
+        <ul class="doc-list">
+          <li>새로운 망자 NPC 풀 추가</li>
+          <li>신규 외부인 캐릭터 추가</li>
+          <li>신규 엔딩 추가</li>
+          <li>특수 시나리오 모드</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>변경 불필요 요소</h4>
+        <ul class="doc-list">
+          <li>대화 시스템 코어</li>
+          <li>업경 컷신 시스템</li>
+          <li>업보 수치 집계 로직</li>
+          <li>UI/UX 기본 레이아웃</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="s9-2">9.2 DLC 예시 설계</h3>
+    <div class="card">
+      <h4>DLC 1 — 신칸센 대폭발 사건</h4>
+      <p style="font-size:13px;">열차 탈선 대형사고로 다수의 망자가 한꺼번에 유입. 모든 NPC가 <strong>하나의 사건에 연루</strong>된 옴니버스 구조로, 기존 독립 에피소드 방식에서 <strong>추리물 장르</strong>로 확장한다.</p>
+      <ul class="doc-list">
+        <li>핵심 변경: 망자 간 관계 데이터 필드 추가 필요</li>
+        <li>신규 시스템: 용의자 지목 / 사건 재구성 화면 <span class="tbd">TBD</span></li>
+        <li>기존 시스템 활용: 대화·업경·판정 시스템 그대로 사용</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>DLC 2 — 할로윈 소동</h4>
+      <p style="font-size:13px;">할로윈 날 망자가 현실로 나갈 수 있는 특수 이벤트 설정. 기존 인간 망자 중심에서 <strong>판타지 존재(유령·마녀·흡혈귀 등)</strong>로 캐릭터 방향 전환 가능.</p>
+      <ul class="doc-list">
+        <li>핵심 변경: 판정 기준 확장 (현실 출입 허가/불허)</li>
+        <li>캐릭터 디자인 방향: 기존 카툰풍 유지, 할로윈 테마 적용</li>
+        <li>기존 시스템 활용: 대화·청탁·엔딩 시스템 그대로 사용</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- ===== 10. 그래픽 리소스 ===== -->
+  <section class="section" id="s10">
+    <h2><span class="sec-num">10</span> 그래픽 리소스</h2>
+    <p>본 챕터는 Heaven or Hell 제작에 필요한 그래픽 에셋을 카테고리별로 분류·목록화한다. 제작 우선순위 및 담당자 컬럼은 별도 일정 문서와 연동 예정.</p>
+
+    <h3 id="s10-1">10.1 캐릭터 에셋</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>에셋 ID</th><th>분류</th><th>이름/설명</th><th>형식</th><th>해상도(안)</th><th>수량</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>CHR_NPC_###</td><td>망자 NPC 스프라이트</td><td>일반 망자 캐릭터 (본편)</td><td>PNG / 스프라이트시트</td><td><span class="tbd-inline">TBD</span></td><td><span class="tbd-inline">TBD</span>종</td><td><span class="wip">WIP</span></td></tr>
+          <tr><td>CHR_EXT_001</td><td>외부인 스프라이트</td><td>저승사자</td><td>PNG</td><td><span class="tbd-inline">TBD</span></td><td>표정 변형 포함</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>CHR_EXT_002</td><td>외부인 스프라이트</td><td>신</td><td>PNG</td><td><span class="tbd-inline">TBD</span></td><td>표정 변형 포함</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>CHR_EXT_003</td><td>외부인 스프라이트</td><td>크툴루</td><td>PNG</td><td><span class="tbd-inline">TBD</span></td><td>표정 변형 포함</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>CHR_EXT_004</td><td>외부인 스프라이트</td><td>파라오</td><td>PNG</td><td><span class="tbd-inline">TBD</span></td><td>표정 변형 포함</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>CHR_PORTRAIT_###</td><td>NPC 프로필 아이콘</td><td>망자 흉상/아이콘 (프로필 패널용)</td><td>PNG</td><td>200×200px (안)</td><td>NPC수와 동일</td><td><span class="tbd">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s10-2">10.2 배경 에셋</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>에셋 ID</th><th>분류</th><th>이름/설명</th><th>형식</th><th>해상도(안)</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>BG_JUDGE_ROOM</td><td>배경 — 망자 분류 화면</td><td>연옥주식회사 판별실 내부</td><td>PNG / 레이어 PSD</td><td>1920×1080</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>BG_LOUNGE</td><td>배경 — 직원 휴게실</td><td>연옥주식회사 직원 휴식공간</td><td>PNG / 레이어 PSD</td><td>1920×1080</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>BG_TITLE</td><td>배경 — 타이틀 화면</td><td>타이틀/메인 메뉴 배경</td><td>PNG</td><td>1920×1080</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>BG_RESULT</td><td>배경 — 결과 화면</td><td>Day/최종 결과 화면 배경</td><td>PNG</td><td>1920×1080</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>BG_ENDING_###</td><td>배경 — 엔딩 화면</td><td>엔딩별 전용 배경 (엔딩 수만큼)</td><td>PNG</td><td>1920×1080</td><td><span class="tbd">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s10-3">10.3 UI 에셋</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>에셋 ID</th><th>분류</th><th>이름/설명</th><th>형식</th><th>비고</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>UI_BTN_HEAVEN</td><td>버튼</td><td>천국 판정 버튼</td><td>PNG / 9-slice</td><td>Normal / Hover / Disabled 3종</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_BTN_HELL</td><td>버튼</td><td>지옥 판정 버튼</td><td>PNG / 9-slice</td><td>Normal / Hover / Disabled 3종</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_BTN_CHOICE</td><td>버튼</td><td>대화 선택지 버튼</td><td>PNG / 9-slice</td><td>Normal / Hover 2종</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_PANEL_PROFILE</td><td>패널 프레임</td><td>NPC 프로필 패널 프레임</td><td>PNG / 9-slice</td><td>고딕-기업풍 스타일</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_PANEL_DIALOG</td><td>패널 프레임</td><td>대화창 프레임</td><td>PNG / 9-slice</td><td></td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_GAUGE_SCORE</td><td>HUD</td><td>업보 게이지 바</td><td>PNG (Fill 방식)</td><td>S~F 등급 색상 변화</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_ICON_PHONE</td><td>아이콘</td><td>전화기 아이콘</td><td>PNG</td><td>Day 1 전용 HUD</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_STAMP_HEAVEN</td><td>연출 이펙트</td><td>천국 도장 스탬프</td><td>PNG + 애니메이션</td><td>판정 확정 연출용</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_STAMP_HELL</td><td>연출 이펙트</td><td>지옥 도장 스탬프</td><td>PNG + 애니메이션</td><td>판정 확정 연출용</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>UI_LOGO</td><td>로고</td><td>HEAVEN OR HELL 게임 로고</td><td>PNG / SVG</td><td>타이틀·크레딧 공용</td><td><span class="tbd">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s10-4">10.4 컷신 / 업경 에셋</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>에셋 ID</th><th>분류</th><th>이름/설명</th><th>형식</th><th>연결 NPC</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>YK_001</td><td>업경 컷신</td><td>npc_001(홍길동) 업경 장면</td><td>PNG 시퀀스 or 영상</td><td>npc_001</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>YK_###</td><td>업경 컷신</td><td>각 NPC별 업경 (NPC 수만큼)</td><td>PNG 시퀀스 or 영상</td><td>NPC별</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>CS_OPENING</td><td>오프닝 컷신</td><td>게임 시작 오프닝 (연옥주식회사 소개)</td><td><span class="tbd-inline">TBD</span></td><td>—</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>CS_ENDING_###</td><td>엔딩 컷신</td><td>각 엔딩별 일러스트/컷신</td><td>PNG / 영상</td><td>엔딩별</td><td><span class="tbd">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s10-5">10.5 이펙트 / 파티클 에셋</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>에셋 ID</th><th>분류</th><th>이름/설명</th><th>구현 방식</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td>FX_YEOMGYEONG</td><td>업경 발동 이펙트</td><td>업경 발동 시 화면 전환 이펙트 (빛/왜곡)</td><td>Unity Particle / Shader</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>FX_VERDICT_H</td><td>판정 이펙트</td><td>천국 판정 확정 이펙트 (빛, 상승 파티클)</td><td>Unity Particle</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>FX_VERDICT_L</td><td>판정 이펙트</td><td>지옥 판정 확정 이펙트 (불꽃, 하강 파티클)</td><td>Unity Particle</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>FX_OUTSIDER_ENTER</td><td>등장 이펙트</td><td>외부인 등장 이펙트</td><td>Unity Animation / 스프라이트</td><td><span class="tbd">TBD</span></td></tr>
+          <tr><td>FX_SCREEN_TRANS</td><td>화면 전환</td><td>화면 전환 페이드/와이프 이펙트</td><td>Unity Animator</td><td><span class="tbd">TBD</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="s10-6">10.6 에셋 수량 요약</h3>
+    <div class="card-grid-3">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:28px; color:var(--gold); font-weight:700;"><span class="tbd">TBD</span></div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">캐릭터 스프라이트</div>
+        <div style="font-size:11px; color:var(--text-muted);">(NPC + 외부인)</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:28px; color:var(--heaven); font-weight:700;">5+</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">배경 일러스트</div>
+        <div style="font-size:11px; color:var(--text-muted);">(본편 기준)</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:28px; color:var(--hell); font-weight:700;">10+</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">UI 에셋</div>
+        <div style="font-size:11px; color:var(--text-muted);">(버튼·패널·HUD)</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:28px; color:var(--gold); font-weight:700;"><span class="tbd">TBD</span></div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">업경 컷신</div>
+        <div style="font-size:11px; color:var(--text-muted);">(NPC 수에 비례)</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:28px; color:var(--gold); font-weight:700;">6+</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">엔딩 일러스트</div>
+        <div style="font-size:11px; color:var(--text-muted);">(엔딩 수만큼)</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:28px; color:var(--heaven); font-weight:700;">5종</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">이펙트/파티클</div>
+        <div style="font-size:11px; color:var(--text-muted);">(판정·업경·전환)</div>
+      </div>
+    </div>
+
+    <div class="callout callout-gold" style="margin-top:8px;">
+      <div class="callout-title">📌 에셋 네이밍 규칙</div>
+      <code>[카테고리]_[대상]_[번호/변형]</code> 형식 사용. 예: <code>CHR_NPC_001_normal</code>, <code>BG_LOUNGE_day</code>, <code>UI_BTN_HEAVEN_hover</code>. 세부 규칙은 에셋 관리 문서에서 별도 정의.
+    </div>
+  </section>
+
+
+</main>
+</div>
+
+
+  <!-- ===== 변경 이력 ===== -->
+  <section class="section" id="changelog">
+    <h2><span class="sec-num">★</span> 변경 이력</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>버전</th><th>구분</th><th>항목</th><th>기존 내용</th><th>변경 내용</th><th>비고</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>v1.3.0</td><td>패치</td><td>스킬 검수 반영</td><td>v1.3</td><td>버전 형식 3단계 통일, doc-summary 추가, Mermaid 노드 \n 제거(11블록)</td><td>indiegame-html-gdd 검수</td></tr>
+          <tr><td>v1.3</td><td>제거</td><td>2장 구버전 중복 섹션 4개</td><td>신·구버전 섹션 혼재 (2.3~2.6 이중 존재)</td><td>구버전 2.3 대화/2.4 업경/2.5 판정/2.6 전화기 블록 완전 제거, 내용은 신버전 2.4~2.7에 통합</td><td>§2장</td></tr>
+          <tr><td>v1.3</td><td>수정</td><td>2.5.3 업보 수치 연동 테이블 제거</td><td>구버전 청탁 이행 기준 테이블 잔존</td><td>§5.3 참조로 대체, 중복 제거</td><td>§2.5</td></tr>
+          <tr><td>v1.3</td><td>복구</td><td>8.1 NPC 데이터 테이블 섹션 헤더</td><td>섹션 헤더 누락 (내용은 존재)</td><td>h3 id="s8-1" 헤더 복원</td><td>§8.1</td></tr>
+          <tr><td>v1.3</td><td>전면 재작성</td><td>8.3 엔딩 조건 테이블</td><td>점수 구간 방식 (이전 시스템 잔존)</td><td>업보 수치 항목별 최고값 발동 방식으로 교체</td><td>§8.3</td></tr>
+          <tr><td>v1.3</td><td>전면 재작성</td><td>8.4 업보 수치 환산표</td><td>점수 구간·등급·평가 메시지 방식 (이전 시스템)</td><td>항목별 증감 기준표로 교체 (신 수치·악마 수치 등)</td><td>§8.4</td></tr>
+          <tr><td>v1.3</td><td>수정</td><td>6.2 엔딩 카드 발동 조건</td><td>"업보 수치 최고/양호/불량/최저 구간" 문구 잔존</td><td>각 카드에 업보 수치 항목 배지로 통일</td><td>§6.2</td></tr>
+          <tr><td>v1.3</td><td>수정</td><td>title 태그</td><td>v1.1 잔존</td><td>v1.3으로 수정</td><td>head</td></tr>
+          <tr><td>v1.2</td><td>용어 확정</td><td>인사평가 점수 → 업보 수치</td><td>단일 누적 점수, 구간 분기</td><td>엔딩 항목별 독립 수치, 최고값 발동 방식</td><td>전체 문서 치환</td></tr>
+          <tr><td>v1.2</td><td>신규 추가</td><td>씬 구분 및 화면 4종 명세</td><td>미명시</td><td>스타트/분류 씬/휴게실 씬/엔딩 화면 4종 확정 (§1.3)</td><td></td></tr>
+          <tr><td>v1.2</td><td>확정</td><td>판정 버튼 활성 조건</td><td>대화 종료 후 활성 (TBD)</td><td>대화 중 언제든 활성. 업경 컷신 중만 비활성</td><td>§2.2</td></tr>
+          <tr><td>v1.2</td><td>신규 추가</td><td>프로필 열람 기능 상세</td><td>클릭 → 팝업 (개요만 존재)</td><td>스프라이트 이동 입장 → 클릭 → 이력서형 팝업 → 바깥 클릭 복귀 (§2.3)</td><td></td></tr>
+          <tr><td>v1.2</td><td>확정</td><td>대화창 형태 및 배치</td><td>미정</td><td>화면 중앙 메신저형, 스크롤 열람 가능 (§2.4)</td><td>Unity ScrollView 권장</td></tr>
+          <tr><td>v1.2</td><td>수정</td><td>선택지 — 중립/기타</td><td>확정</td><td>포함 여부 미정(TBD)으로 변경</td><td>§2.3.2</td></tr>
+          <tr><td>v1.2</td><td>수정</td><td>업경 발동 조건</td><td>감정 임계치 중심</td><td>플래그 조건 기반으로 명칭·순서 수정</td><td>§2.4.1</td></tr>
+          <tr><td>v1.2</td><td>전면 재작성</td><td>5장 업보 수치 시스템</td><td>단일 점수 집계 흐름</td><td>항목별 독립 슬롯 구조, 증감 테이블, 최고값 분기 다이어그램</td><td>§5장</td></tr>
+          <tr><td>v1.2</td><td>수정</td><td>6장 엔딩 분기 다이어그램</td><td>점수 구간 분기</td><td>업보 수치 최고값 항목 발동 방식, 동점 처리 TBD 추가</td><td>§6.1</td></tr>
+          <tr><td>v1.2</td><td>신규 추가</td><td>3장 휴게실 역할 명세</td><td>청탁 시스템 위주</td><td>업보 수치 직접 조작·엔딩 잠금 해제·플래그 이벤트 구조 추가</td><td>§3.0, §3.1</td></tr>
+          <tr><td>v1.2</td><td>수정</td><td>7.1 화면 전환 플로우</td><td>퇴근 결과 화면 포함 다단계</td><td>확정된 4종 화면 기준으로 간소화</td><td>§7.1</td></tr>
+          <tr><td>v1.2</td><td>수정</td><td>7.2 SVG 목업</td><td>프로필 패널 고정 / 대화창 중앙</td><td>스프라이트+팝업 좌측 / 메신저형 대화창 중앙 / 업보 수치 게이지 우측 HUD</td><td>§7.2</td></tr>
+          <tr><td>v1.1</td><td>신규 추가</td><td>모바일 반응형 CSS</td><td>없음</td><td>768px 이하 햄버거 메뉴·단일 컬럼·테이블 스크롤 처리</td><td></td></tr>
+          <tr><td>v1.1</td><td>신규 추가</td><td>SVG UI 목업 (v1.1 초안)</td><td>표 기반 레이아웃 설명</td><td>망자 분류·휴게실 화면 가배치 SVG 삽입</td><td></td></tr>
+          <tr><td>v1.1</td><td>신규 추가</td><td>8.0 CSV 관리 구조</td><td>없음</td><td>6종 CSV 파일 명세 + 샘플 + Unity 연동 다이어그램</td><td></td></tr>
+          <tr><td>v1.1</td><td>신규 추가</td><td>10장 그래픽 리소스</td><td>없음</td><td>캐릭터·배경·UI·컷신·이펙트 5카테고리 에셋 목록</td><td></td></tr>
+          <tr><td>v1.0</td><td>최초 작성</td><td>전체 문서</td><td>—</td><td>9개 챕터 초안 작성</td><td>2026-03-17</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<!-- JS -->
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#ddeaf8',
+      primaryTextColor: '#1a1a22',
+      primaryBorderColor: '#1c5fa8',
+      lineColor: '#6090c0',
+      secondaryColor: '#f0f1f4',
+      tertiaryColor: '#f6f6f8',
+      edgeLabelBackground: '#ffffff',
+      clusterBkg: '#f0f1f4',
+      titleColor: '#1a1a22',
+      nodeBorder: '#a0a0b8',
+      mainBkg: '#f6f6f8',
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' },
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const tocList = document.getElementById('toc-list');
+    const headings = document.querySelectorAll('main h2, main h3, main h4');
+    headings.forEach((h, i) => {
+      if (!h.id) h.id = 'heading-' + i;
+      const li = document.createElement('li');
+      li.className = 'toc-' + h.tagName.toLowerCase();
+      const a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent.replace(/\s*\d{2}\s*/, '').trim();
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+  });
+
+  (function() {
+    const btn = document.getElementById('mob-menu-btn');
+    const toc = document.getElementById('toc');
+    const overlay = document.getElementById('mob-overlay');
+    function isMobile() { return window.innerWidth <= 768; }
+    function syncBtn() {
+      btn.style.display = isMobile() ? 'flex' : 'none';
+      if (!isMobile()) { toc.classList.remove('open'); overlay.classList.remove('open'); }
+    }
+    btn.addEventListener('click', () => { toc.classList.toggle('open'); overlay.classList.toggle('open'); });
+    overlay.addEventListener('click', () => { toc.classList.remove('open'); overlay.classList.remove('open'); });
+    toc.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      if (isMobile()) { toc.classList.remove('open'); overlay.classList.remove('open'); }
+    }));
+    window.addEventListener('resize', syncBtn);
+    syncBtn();
+  })();
+</script>
+
+</body>
+</html>
+<!-- tags: 시스템, 루프, 엔딩 -->
